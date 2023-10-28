@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --base: #000000;
+    --transparent: rgba(0, 0, 0, 0);
+    --background: #000000;
+    --foreground: #d2d5da;
+    --link: #ffffff;
+    --radius: 0.5rem;
+
+    --primary-50: #fafafa;
+    --primary-100: #f5f5f5;
+    --primary-200: #e5e5e5;
+    --primary-300: #d4d4d4;
+    --primary-400: #a3a3a3;
+    --primary-500: #737373;
+    --primary-600: #525252;
+    --primary-700: #404040;
+    --primary-800: #262626;
+    --primary-900: #171717;
+    --primary-950: #0a0a0a;
+
+    --error-50: #fcf2f2;
+    --error-100: #f9e3e2;
+    --error-200: #f6cccb;
+    --error-300: #f0a9a7;
+    --error-400: #e77975;
+    --error-500: #dd524c;
+    --error-600: #ca3a31;
+    --error-700: #aa2e26;
+    --error-800: #8c2822;
+    --error-900: #752522;
+    --error-950: #3f0f0d;
+
+    --warning-50: #fefbed;
+    --warning-100: #fcf3cc;
+    --warning-200: #fef0c7;
+    --warning-300: #f9e796;
+    --warning-400: #f2c14b;
+    --warning-500: #e9a23b;
+    --warning-600: #cc7c2e;
+    --warning-700: #a85923;
+    --warning-800: #88451d;
+    --warning-900: #70391a;
+    --warning-950: #401d09;
+
+    --success-50: #effcf5;
+    --success-100: #d9f9e6;
+    --success-200: #b8f1d2;
+    --success-300: #8ee4ba;
+    --success-400: #6ad09d;
+    --success-500: #55b685;
+    --success-600: #43946c;
+    --success-700: #347659;
+    --success-800: #295e48;
+    --success-900: #214d3c;
+    --success-950: #0f2b23;
+  }
+
+  @layer base {
+    * {
+    }
+    body {
+      @apply bg-background text-foreground;
+      font-family: system-ui, sans-serif;
+      background-image: url('/images/background.png');
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+  }
+}
+
+@layer components {
+  .tooltip {
+    @apply z-50 box-border w-max max-w-[100vw-10px] space-y-1 rounded-md border border-slate-100/20 bg-gray-950 px-2.5 py-1 text-xs font-medium text-gray-200 shadow-md shadow-black/5 ring-1 ring-black/5 backdrop-blur-md transition ease-in-out;
+  }
+
+  html {
+    @apply bg-background;
+  }
+
+  @layer utilities {
+  }
+}
