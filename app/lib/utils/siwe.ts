@@ -88,8 +88,8 @@ export async function newDIDSessionFromWalletClient(walletClient: {
 
   const base = new SiweMessage({
     version: '1',
-    domain: 'intuition.systems',
-    statement: 'I authorize my DID to be used by intuition.systems',
+    domain: 'localhost',
+    statement: 'I authorize my DID to be used by localhost',
     issuedAt: /* @__PURE__ */ new Date().toISOString(),
     resources: [
       'ceramic://*?model=kjzl6hvfrbw6c5be464ta8ne35crfj4dbmxirtjrrdbhzmjvf9hlqtulfc2z7de',

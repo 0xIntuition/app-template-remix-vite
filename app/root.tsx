@@ -33,7 +33,11 @@ export const links: LinksFunction = () => [
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [
-    { title: data ? 'Intuition Portal' : 'Error | Intuition Portal' },
+    {
+      title: data
+        ? 'Intuition App Template - Remix'
+        : 'Error | Intuition App Template - Remix',
+    },
     { name: 'description', content: `Start your Intuition journey.` },
   ]
 }
@@ -92,7 +96,7 @@ export default function App() {
     )
 
     const { connectors } = getDefaultWallets({
-      appName: 'Intuition Portal',
+      appName: 'Intuition App Template - Remix',
       chains,
       projectId: ENV.WALLETCONNECT_PROJECT_ID!,
     })
