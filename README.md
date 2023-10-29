@@ -10,7 +10,7 @@ This Intuition Remix.run App Template is your golden ticket to a smooth start wi
 
 - **Alpha Access**: First things first, this isn't for everyone. You've got to be part of the Intuition Alpha Cohort to use this application. Your API Key is like a VIP pass to a hackathon party where everyone is awkwardly standing in the corner with their laptop.
 
-- **Authentication Ready**: We've integrated Next-Auth and set it up for Intuition's closed alpha. This means your app will have authentication using DID Session authorization and an API key. And guess what? If your wallet connects and is part of our elite cohort, the API key fetches itself. **magic ✨**
+- **Authentication Ready**: We've integrated remix-auth and set it up for Intuition's closed alpha. This means your app will have authentication using DID Session authorization and an API key. And guess what? If your wallet connects and is part of our elite cohort, the API key fetches itself. **magic ✨**
 
 - **Focus on What Matters**: With authentication out of the way, you can channel all your energy and creativity into building the unique features of your app. We handled the nitty-gritty, so you don't have to.
 
@@ -18,7 +18,7 @@ This Intuition Remix.run App Template is your golden ticket to a smooth start wi
 
 1. Prerequisites:
 
-Node.js: Before anything else, ensure you have Node.js installed. Given that Next.js 13 requires a minimum Node.js version of 16.14.0, make sure you're up-to-date. If you're still on 12.x or 14.x, it's time for an upgrade my g.
+Node.js: Before anything else, Remix.run requires that you have either a Active or Maintenance version of Node.js installed. [Remix Documentation](https://remix.run/docs/en/main/other-api/node)
 
 ArbitrumGoerli: Intuition is currently deployed on Arbitrum Goerli. To interact with the Intuition API, you'll need to connect to the Arbitrum Goerli testnet. Unsure how to do that? Check out this [tutorial](https://developer.offchainlabs.com/docs/developer_quickstart).
 
@@ -110,7 +110,7 @@ To learn more about Intuition, take a look at the following resources:
 
 ## References
 
-- [Next.js Documentation](https://remix.run/) - learn about Next.js features and API.
+- [Remix.run Documentation](https://remix.run/) - learn about Remix.run features and API.
 - [Remix-Auth Documentation](https://github.com/sergiodxa/remix-auth) - learn about Next-Auth features and API.
 - [WalletConnect Documentation](https://docs.walletconnect.com/) - learn about WalletConnect features and API.
 - [Alchemy Documentation](https://docs.alchemy.com/) - learn about Alchemy features and API.
