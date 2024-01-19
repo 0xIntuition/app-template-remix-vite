@@ -6,19 +6,19 @@ import { LoaderFunctionArgs, json } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import Header from '@/components/header'
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const user = (await requireAuthedUser(request)) as User
-  const { wallet } = user
-  return json({
-    wallet: wallet,
-  })
-}
+// export async function loader({ request }: LoaderFunctionArgs) {
+//   const user = (await requireAuthedUser(request)) as User
+//   const { wallet } = user
+//   return json({
+//     wallet: wallet,
+//   })
+// }
 
 export default function AppIndex() {
-  const { wallet } = useLoaderData<typeof loader>()
-  if (wallet) {
-    console.log('Session wallet', wallet)
-  }
+  // const { wallet } = useLoaderData<typeof loader>()
+  // if (wallet) {
+  //   console.log('Session wallet', wallet)
+  // }
   return (
     <main className="flex min-h-screen flex-col items-center gap-y-12 p-24">
       <Header />
