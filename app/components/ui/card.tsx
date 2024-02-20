@@ -1,5 +1,4 @@
 import * as React from 'react'
-
 import { cn } from '@/lib/utils/misc'
 
 const Card = React.forwardRef<
@@ -9,7 +8,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      'bg-gray-50/5 rounded-lg border border-stone-400/50 text-card-foreground shadow-sm backdrop-blur-sm',
+      'bg-primary-950 rounded-xl border border-stone-800/50 text-card-foreground shadow-lg backdrop-blur-md',
       className,
     )}
     {...props}

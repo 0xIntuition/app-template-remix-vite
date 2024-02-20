@@ -1,29 +1,42 @@
 import { Link, useFetcher } from '@remix-run/react'
-import { AccountButton } from '@/components/account-button'
 import IntuitionLogotype from '@/assets/intuition-logotype'
 import { useDisconnect } from 'wagmi'
+import templateBadge from '@images/template-badge.png'
+import { AccountButton } from './account-button'
+import { User } from 'types/user'
 
-export default function Header() {
+export interface HeaderProps {
+  user: User | null
+}
+
+export default function Header({ user }: HeaderProps) {
+  const fetcher = useFetcher()
   const { disconnect } = useDisconnect()
-  const fetcher = useFetcher<{
-    didSessionError?: string
-    apikeyError?: string
-    apikey?: string
-  } | null>()
 
   async function handleSignout() {
     disconnect()
-    fetcher.submit({}, { method: 'post', action: '/action/auth/logout' })
+    fetcher.submit({}, { method: 'post', action: '/actions/auth/logout' })
   }
   return (
-    <div className="w-full max-w-7xl items-start justify-between lg:flex">
-      <div className="space-y-6 max-lg:flex max-lg:flex-col max-lg:items-center">
-        <Link to="/app">
-          <IntuitionLogotype className="h-10" />
+    <div className="flex w-full max-w-7xl items-center justify-between">
+      <div>
+        <Link to="/">
+          <div className="flex items-center gap-4">
+            <IntuitionLogotype />
+            <img
+              src={templateBadge}
+              alt="Intuition App Template"
+              className="h-6 w-auto shadow-md"
+            />
+          </div>
         </Link>
       </div>
-      <div className="mt-4 flex flex-col items-end gap-4 max-lg:items-center max-lg:justify-center">
-        <AccountButton handleSignout={handleSignout} />
+      <div className="h-12">
+        {user?.wallet ? (
+          <AccountButton handleSignOut={handleSignout} user={user} size="lg" />
+        ) : (
+          <div />
+        )}
       </div>
     </div>
   )

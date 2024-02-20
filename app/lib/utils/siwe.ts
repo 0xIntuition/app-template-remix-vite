@@ -1,110 +1,50 @@
-import type { RuntimeCompositeDefinition } from '@composedb/types'
 import { Cacao, SiweMessage } from '@didtools/cacao'
 import { randomBytes } from 'crypto'
 import { DIDSession, createDIDKey } from 'did-session'
-import { arbitrumGoerli } from 'wagmi/chains'
+import { generateNonce } from 'siwe'
+import { DEFAULT_CHAIN_ID } from './constants'
 
-// TODO: Export this from the client package
-export const definition: RuntimeCompositeDefinition = {
-  models: {
-    AtomMetadata: {
-      id: 'kjzl6hvfrbw6c5be464ta8ne35crfj4dbmxirtjrrdbhzmjvf9hlqtulfc2z7de',
-      accountRelation: { type: 'list' },
-    },
-    EasMetadata: {
-      id: 'kjzl6hvfrbw6c6bbvtt3odhuczkfzyfqpm6owxyn9og2s4dn419biarj4zl0cq0',
-      accountRelation: { type: 'list' },
-    },
-  },
-  objects: {
-    AtomMetadataImageMetadata: {
-      src: { type: 'string', required: true },
-      size: { type: 'integer', required: false },
-      width: { type: 'integer', required: true },
-      height: { type: 'integer', required: true },
-      mimeType: { type: 'string', required: true },
-    },
-    AtomMetadataImageSources: {
-      original: {
-        type: 'reference',
-        refType: 'object',
-        refName: 'AtomMetadataImageMetadata',
-        required: true,
-      },
-      alternatives: {
-        type: 'list',
-        required: false,
-        item: {
-          type: 'reference',
-          refType: 'object',
-          refName: 'AtomMetadataImageMetadata',
-          required: false,
-        },
-      },
-    },
-    AtomMetadata: {
-      image: {
-        type: 'reference',
-        refType: 'object',
-        refName: 'AtomMetadataImageSources',
-        required: false,
-      },
-      atomID: { type: 'string', required: true, indexed: true },
-      semantic: { type: 'string', required: false },
-      corporaID: { type: 'string', required: false },
-      description: { type: 'string', required: true, indexed: true },
-      displayName: { type: 'string', required: true, indexed: true },
-      thumbnailImage: { type: 'string', required: false },
-      tripleCreation: { type: 'string', required: false },
-      externalReference: { type: 'string', required: false },
-    },
-    EasMetadata: {
-      data: { type: 'string', required: false },
-      easId: { type: 'string', required: true, indexed: true },
-      refUID: { type: 'string', required: true },
-      attester: { type: 'string', required: true, indexed: true },
-      recipient: { type: 'string', required: true },
-      revocable: { type: 'boolean', required: true },
-      expirationTime: { type: 'integer', required: true },
-      revocationTime: { type: 'integer', required: true },
-    },
-  },
-  enums: {},
-  accountData: {
-    atomMetadataList: { type: 'connection', name: 'AtomMetadata' },
-    easMetadataList: { type: 'connection', name: 'EasMetadata' },
-  },
+/**
+ * Uses window.location.host and window.location.origin for the
+ * defaults on this. This is used in the SIWE docs and is considered safe and a recommended practice.
+ * As of now, this code only runs on the client. If we ever want to run SIWE in a server context we'd need
+ * to dynamically set this based on environment and not rely on window.
+ */
+
+export function createSignInMessage(
+  message: Partial<SiweMessage> = {},
+): SiweMessage {
+  message.domain ??= window.location.host // update the fallback for the domain
+  message.statement ??= 'Sign in to Intuition'
+  message.address ??= '0x0'
+  message.uri ??= window.location.origin // update the fallback for the origin (we want to use the didKey.id, as shown below)
+  message.version ??= '1'
+  message.chainId ??= DEFAULT_CHAIN_ID
+  message.nonce ??= generateNonce()
+
+  return new SiweMessage(message)
 }
 
-//TODO: Export this to client package
 export async function newDIDSessionFromWalletClient(walletClient: {
   account: { address: string }
   signMessage: (message: { message: string }) => Promise<string>
 }) {
   if (!walletClient.account.address) throw new Error('No wallet client')
+
   // keys
   const keySeed = randomBytes(32)
   const didKey = await createDIDKey(keySeed)
 
-  const base = new SiweMessage({
-    version: '1',
-    domain: 'localhost',
-    statement: 'I authorize my DID to be used by localhost',
-    issuedAt: /* @__PURE__ */ new Date().toISOString(),
-    resources: [
-      'ceramic://*?model=kjzl6hvfrbw6c5be464ta8ne35crfj4dbmxirtjrrdbhzmjvf9hlqtulfc2z7de',
-      'ceramic://*?model=kjzl6hvfrbw6c6bbvtt3odhuczkfzyfqpm6owxyn9og2s4dn419biarj4zl0cq0',
-    ],
-  })
+  const base = createSignInMessage()
   const expiration = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7) // expire in 1 week
 
   // sign message
   const message = new SiweMessage({
     ...base,
+    issuedAt: new Date().toISOString(),
     address: walletClient.account.address as string,
-    chainId: arbitrumGoerli.id.toString(),
     expirationTime: expiration.toISOString(),
-    uri: didKey.id,
+    uri: didKey.id, // overrides the default uri of window.location.origin
   })
   const signature = await walletClient?.signMessage({
     message: message.signMessage(),
