@@ -1,8 +1,11 @@
 import { useNonce } from '@/lib/utils/nonce-provider'
-import intuitionTheme from '@/lib/utils/rainbow-theme'
 import styles from '@/styles/global.css'
 
-import { RainbowKitProvider, getDefaultWallets } from '@rainbow-me/rainbowkit'
+import {
+  RainbowKitProvider,
+  darkTheme,
+  getDefaultWallets,
+} from '@rainbow-me/rainbowkit'
 import rainbowStylesUrl from '@rainbow-me/rainbowkit/styles.css'
 import { cssBundleHref } from '@remix-run/css-bundle'
 import {
@@ -21,9 +24,9 @@ import {
   useLoaderData,
 } from '@remix-run/react'
 import React, { useState } from 'react'
-import { WagmiConfig, configureChains, createConfig } from 'wagmi'
-import { arbitrumGoerli } from 'wagmi/chains'
-import { alchemyProvider } from 'wagmi/providers/alchemy'
+import { WagmiConfig, configureChains, createConfig, mainnet } from 'wagmi'
+import { optimismSepolia } from 'wagmi/chains'
+import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
 
 export const links: LinksFunction = () => [
   { rel: 'stylesheet', href: styles },
@@ -46,6 +49,7 @@ export async function loader({ request }: DataFunctionArgs) {
   return json({
     ENV: {
       ALCHEMY_API_KEY: process.env.ALCHEMY_API_KEY,
+      ALCHEMY_RPC_URL: process.env.ALCHEMY_RPC_URL,
       WALLETCONNECT_PROJECT_ID: process.env.WALLETCONNECT_PROJECT_ID,
     },
   })
@@ -91,8 +95,14 @@ export default function App() {
 
   const [{ config, chains }] = useState(() => {
     const { chains, publicClient, webSocketPublicClient } = configureChains(
-      [arbitrumGoerli],
-      [alchemyProvider({ apiKey: ENV.ALCHEMY_API_KEY! })],
+      [optimismSepolia, mainnet],
+      [
+        jsonRpcProvider({
+          rpc: () => ({
+            http: ENV.ALCHEMY_RPC_URL!,
+          }),
+        }),
+      ],
     )
 
     const { connectors } = getDefaultWallets({
@@ -121,13 +131,22 @@ export default function App() {
           <WagmiConfig config={config}>
             <RainbowKitProvider
               chains={chains}
-              theme={intuitionTheme}
               modalSize="compact"
+              theme={darkTheme()}
             >
-              <div className="relative flex h-screen w-full flex-col justify-between">
-                <div className="flex-1">
+              <div className="relative flex min-h-screen w-full flex-col justify-between antialiased">
+                <div className="z-10 flex-1">
                   <Outlet />
                 </div>
+                <div
+                  className="bg-grid-white/[0.05] absolute inset-0 z-0 border-b border-slate-100/5 bg-bottom"
+                  style={{
+                    maskImage:
+                      'linear-gradient(to top left, transparent, black)',
+                    WebkitMaskImage:
+                      'linear-gradient(to top left, transparent, black)',
+                  }}
+                />
               </div>
             </RainbowKitProvider>
           </WagmiConfig>

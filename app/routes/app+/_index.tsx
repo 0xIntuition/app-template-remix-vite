@@ -5,30 +5,22 @@ import { User } from 'types/user'
 import { LoaderFunctionArgs, json } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import Header from '@/components/header'
+import GetStarted from '@/components/get-started'
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = (await requireAuthedUser(request)) as User
-  const { wallet } = user
   return json({
-    wallet: wallet,
+    user,
   })
 }
 
 export default function AppIndex() {
-  const { wallet } = useLoaderData<typeof loader>()
-  if (wallet) {
-    console.log('Session wallet', wallet)
-  }
+  const { user } = useLoaderData<typeof loader>()
   return (
-    <main className="flex min-h-screen flex-col items-center gap-y-12 p-24">
-      <Header />
-      <div className="flex h-full flex-col items-center pt-40">
-        <p className="text-md bg-gray-50/5 cursor-default rounded-md border border-stone-800/50 px-4 py-3 font-mono backdrop-blur-sm">
-          Get started by editing{' '}
-          <span className="font-bold text-success-500">
-            src/routes/app._index.tsx
-          </span>
-        </p>
+    <main className="flex min-h-screen flex-col items-center gap-y-12 p-8">
+      <Header user={user} />
+      <div className="flex h-full flex-col items-center pt-[32vh]">
+        <GetStarted />
       </div>
     </main>
   )
