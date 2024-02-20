@@ -5,7 +5,6 @@ import { disconnect } from '@wagmi/core'
 import { LoaderFunctionArgs, json } from '@remix-run/node'
 import { requireAuthedUser } from '@/lib/services/auth.server'
 import { User } from 'types/user'
-import Header from '@/components/header'
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = (await requireAuthedUser(request)) as User
@@ -22,7 +21,7 @@ export default function AppLayout() {
   useEffect(() => {
     if (!isConnected || address !== authedWallet) {
       disconnect()
-      fetcher.submit({}, { method: 'post', action: '/action/auth/logout' })
+      fetcher.submit({}, { method: 'post', action: '/actions/auth/logout' })
     }
   }, [isConnected, address])
 

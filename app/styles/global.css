@@ -11,17 +11,17 @@
     --link: #ffffff;
     --radius: 0.5rem;
 
-    --primary-50: #fafafa;
-    --primary-100: #f5f5f5;
-    --primary-200: #e5e5e5;
-    --primary-300: #d4d4d4;
-    --primary-400: #a3a3a3;
-    --primary-500: #737373;
-    --primary-600: #525252;
-    --primary-700: #404040;
-    --primary-800: #262626;
-    --primary-900: #171717;
-    --primary-950: #0a0a0a;
+    --primary-50: #f6f6f6;
+    --primary-100: #e7e7e7;
+    --primary-200: #d1d1d1;
+    --primary-300: #b0b0b0;
+    --primary-400: #888888;
+    --primary-500: #6d6d6d;
+    --primary-600: #5d5d5d;
+    --primary-700: #4f4f4f;
+    --primary-800: #454545;
+    --primary-900: #3d3d3d;
+    --primary-950: #0f0f0f;
 
     --error-50: #fcf2f2;
     --error-100: #f9e3e2;
@@ -64,19 +64,15 @@
     * {
     }
     body {
-      @apply bg-background text-foreground;
+      @apply bg-gradient-to-br from-[#141414] to-[#000] text-foreground;
       font-family: system-ui, sans-serif;
-      background-image: url('/images/background.png');
-      background-position: center;
-      background-repeat: no-repeat;
-      background-size: cover;
     }
   }
 }
 
 @layer components {
   .tooltip {
-    @apply z-50 box-border w-max max-w-[100vw-10px] space-y-1 rounded-md border border-slate-100/20 bg-gray-950 px-2.5 py-1 text-xs font-medium text-gray-200 shadow-md shadow-black/5 ring-1 ring-black/5 backdrop-blur-md transition ease-in-out;
+    @apply bg-primary-950 text-primary-200 z-50 box-border w-max max-w-[100vw-10px] space-y-1 rounded-md border border-slate-100/20 px-2.5 py-1 text-xs font-medium shadow-md shadow-black/5 ring-1 ring-black/5 backdrop-blur-md transition ease-in-out;
   }
 
   html {

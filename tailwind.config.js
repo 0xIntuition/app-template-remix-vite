@@ -1,3 +1,8 @@
+const svgToDataUri = require('mini-svg-data-uri')
+const {
+  default: flattenColorPalette,
+} = require('tailwindcss/lib/util/flattenColorPalette')
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ['class'],
@@ -28,7 +33,7 @@ module.exports = {
         'primary-foreground': 'var(--foreground)',
         destructive: 'var(--error-600)',
         'primary-foreground': 'var(--foreground)',
-        accent: 'var(--primary-900)',
+        accent: 'rgba(255,255,255,0.05)',
         'accent-foreground': 'var(--foreground)',
         input: 'var(--primary-700)',
         'input-foreground': 'var(--foreground)',
@@ -36,12 +41,12 @@ module.exports = {
         'secondary-foreground': 'var(--foreground)',
         card: 'var(--primary-950)',
         'card-foreground': 'var(--foreground)',
-        border: 'var(--primary-800)',
+        border: 'rgba(255, 255, 255, 0.1)',
         muted: 'var(--primary-800)',
         'muted-foreground': 'var(--primary-500)',
 
         // Primary colors
-        gray: {
+        primary: {
           50: 'var(--primary-50)',
           100: 'var(--primary-100)',
           200: 'var(--primary-200)',
@@ -126,7 +131,40 @@ module.exports = {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
       },
+      boxShadow: {
+        sm: '0px 10px 10px 0px rgba(0, 0, 0, 0.15), 0px 4px 4px 0px rgba(0, 0, 0, 0.10), 0px 1px 0px 0px rgba(0, 0, 0, 0.05)',
+        md: '0px 10px 20px 0px rgba(0, 0, 0, 0.20), 0px 5px 10px 0px rgba(0, 0, 0, 0.10), 0px 2px 4px 0px rgba(0, 0, 0, 0.10)',
+        lg: '0px 15px 30px 0px rgba(0, 0, 0, 0.20), 0px 10px 20px 0px rgba(0, 0, 0, 0.15), 0px 3px 6px 0px rgba(0, 0, 0, 0.10)',
+        xl: '0px 20px 40px 0px rgba(0, 0, 0, 0.25), 0px 15px 30px 0px rgba(0, 0, 0, 0.15), 0px 5px 10px 0px rgba(0, 0, 0, 0.05)',
+      },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [
+    require('tailwindcss-animate'),
+    function ({ matchUtilities, theme }) {
+      matchUtilities(
+        {
+          'bg-grid': (value) => ({
+            backgroundImage: `url("${svgToDataUri(
+              `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="${value}"><path d="M0 .5H31.5V32"/></svg>`,
+            )}")`,
+          }),
+        },
+        {
+          values: flattenColorPalette(theme('backgroundColor')),
+          type: 'color',
+        },
+      )
+
+      matchUtilities(
+        {
+          highlight: (value) => ({ boxShadow: `inset 0 1px 0 0 ${value}` }),
+        },
+        {
+          values: flattenColorPalette(theme('backgroundColor')),
+          type: 'color',
+        },
+      )
+    },
+  ],
 }

@@ -1,4 +1,3 @@
-import Avatar from '@/assets/avatar'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -8,37 +7,34 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-
-import { User } from 'types/user'
-
+import { cn } from '@/lib/utils/misc'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { disconnect } from '@wagmi/core'
 import { LogOut } from 'lucide-react'
-import { useEffect } from 'react'
-import { useAccount } from 'wagmi'
+import type { User } from 'types/user'
+import { optimismSepolia } from 'viem/chains'
+import { useSwitchNetwork } from 'wagmi'
+import { MetaMaskAvatar } from 'react-metamask-avatar'
 
 interface AccountButtonProps {
-  user?: User
-  handleSignout: () => void
+  user?: User | null
+  size?: 'sm' | 'default' | 'lg'
+  handleSignOut: () => void
+  className?: string
 }
 
-export const AccountButton = ({ user, handleSignout }: AccountButtonProps) => {
-  const { isConnected } = useAccount()
+export function AccountButton({
+  user,
+  size = 'default',
+  handleSignOut,
+  className,
+}: AccountButtonProps) {
+  const { switchNetwork } = useSwitchNetwork()
 
-  async function onSignout() {
-    await disconnect()
-    if (user) {
-      handleSignout()
+  const handleSwitch = () => {
+    if (switchNetwork) {
+      switchNetwork(optimismSepolia.id)
     }
   }
-
-  useEffect(() => {
-    if (!isConnected) {
-      onSignout()
-    }
-  })
 
   return (
     <ConnectButton.Custom>
@@ -49,14 +45,25 @@ export const AccountButton = ({ user, handleSignout }: AccountButtonProps) => {
         authenticationStatus,
         mounted,
       }) => {
-        // Note: If your app doesn't use authentication, you
-        // can remove all 'authenticationStatus' checks
         const ready = mounted && authenticationStatus !== 'loading'
         const connected =
           ready &&
           account &&
           chain &&
           (!authenticationStatus || authenticationStatus === 'authenticated')
+
+        if (connected && chain?.id !== optimismSepolia.id) {
+          return (
+            <Button
+              size={size}
+              variant="outline"
+              className={cn(className)}
+              onClick={handleSwitch}
+            >
+              Wrong Network
+            </Button>
+          )
+        }
         return (
           <div
             {...(!ready && {
@@ -68,75 +75,56 @@ export const AccountButton = ({ user, handleSignout }: AccountButtonProps) => {
               },
             })}
           >
-            {!isConnected ? (
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-xs"
-                onClick={openConnectModal}
-              >
-                Connect
-              </Button>
-            ) : (
+            {connected && !!user ? (
               <div className="flex gap-2 rounded-full p-1">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button size="sm" variant="outline" className="text-xs">
-                      {account?.ensName ?? account?.displayName}
+                    <Button
+                      size={'lg-icon'}
+                      variant="ghost"
+                      className={cn(
+                        className,
+                        'h-10 w-10 overflow-hidden rounded-full transition-transform hover:scale-105',
+                      )}
+                    >
+                      <div className="flex items-center gap-1">
+                        <MetaMaskAvatar
+                          address="0xb01F14d1C9000D453241221EB54648F1C378c970"
+                          size={40}
+                          className="rounded-full"
+                        />
+                      </div>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="bg-primary-900 w-48"
-                  >
+                  <DropdownMenuContent align="end" className="bg-popover w-48">
                     <DropdownMenuLabel className="flex items-center gap-2">
-                      <Avatar className="h-6 w-6" />
-                      {account?.displayName}
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {user && (
-                      <DropdownMenuItem
-                        onSelect={(e) => e.preventDefault()}
-                        className="grid gap-2 focus:bg-transparent"
-                      >
-                        <div className="flex">
-                          <Label>DID Session</Label>{' '}
+                      <div className="space-y-1">
+                        <div className="text-primary-500 text-sm font-normal">
+                          Signed in as:
                         </div>
-                        <Input
-                          value={`Bearer ${user.didSession}`}
-                          readOnly
-                          className="px-0"
-                        />
-                      </DropdownMenuItem>
-                    )}
-                    {user && (
-                      <DropdownMenuItem
-                        onSelect={(e) => e.preventDefault()}
-                        className="grid gap-2 focus:bg-transparent"
-                      >
-                        <Label>API Key</Label>
-                        <Input readOnly value={user.apikey} />
-                      </DropdownMenuItem>
-                    )}
-
+                        <div className="font-semibold">
+                          {account?.displayName}
+                        </div>
+                      </div>
+                    </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onSelect={(e) => {
                         e.preventDefault()
-                        handleSignout()
+                        handleSignOut()
                       }}
                       className="cursor-pointer justify-start"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>
-                        {user && 'Sign Out'}
-                        {connected && !user && 'Disconnect'}
+                        {user.didSession && 'Sign Out'}
+                        {connected && !user.didSession && 'Disconnect'}
                       </span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-            )}
+            ) : null}
           </div>
         )
       }}

@@ -1,39 +1,43 @@
-import IntuitionLogotype from '@/assets/intuition-logotype'
-import { AccountButton } from '@/components/account-button'
-import { Button as BaseButton } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Copy } from '@/components/ui/copy'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Form } from '@/components/ui/remix-form'
-
-import { login } from '@/lib/services/auth.server'
-import { formAction } from '@/lib/services/form.server'
-import { cn } from '@/lib/utils/misc'
-import { newDIDSessionFromWalletClient } from '@/lib/utils/siwe'
-
+import { useEffect, useState } from 'react'
+import { useFetcher, useLoaderData, useSubmit } from '@remix-run/react'
 import { ActionFunctionArgs, LoaderFunction, json } from '@remix-run/node'
-import {
-  FetcherWithComponents,
-  Link,
-  useFetcher,
-  useNavigation,
-} from '@remix-run/react'
 import { DIDSession } from 'did-session'
 import { makeDomainFunction } from 'domain-functions'
-import { CheckCircle2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { useAccount, useWalletClient } from 'wagmi'
+import { optimismSepolia } from 'viem/chains'
+import {
+  useAccount,
+  useDisconnect,
+  useNetwork,
+  useSwitchNetwork,
+  useWalletClient,
+} from 'wagmi'
 import { z } from 'zod'
+
+import { ConnectButton } from '@/components/connect-button'
+import Header from '@/components/header'
+import { Card } from '@/components/ui/card'
+import { isAuthedUser, login } from '@/lib/services/auth.server'
+import { formAction } from '@/lib/services/form.server'
+import { newDIDSessionFromWalletClient } from '@/lib/utils/siwe'
+import templateAppIcon from '@images/app-template-logo.png'
+
+import { User } from 'types/user'
+import GetStarted from '@/components/get-started'
 
 const schema = z.object({
   didSession: z.string(),
-  apikey: z.string(),
   wallet: z.string(),
 })
 const mutation = makeDomainFunction(schema)(async (values) => {
   return values
 })
+
+interface FetcherData {
+  didSessionError?: string
+  user?: User
+  token?: string
+  refreshToken?: string
+}
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const resp = await formAction({
@@ -48,301 +52,127 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
+  const user = await isAuthedUser(request)
   const url = new URL(request.url)
   const didSession = url.searchParams.get('didSession')
-  const apikey = url.searchParams.get('apikey')
 
   if (didSession) {
-    const isValid = await DIDSession.fromSession(didSession)
-    if (!isValid) {
+    const session = await DIDSession.fromSession(didSession)
+    if (session === null || session === undefined) {
       return json({ didSessionError: 'Invalid DID Session' })
     }
 
-    const resp = await fetch(`${process.env.API_URL}/apikey`, {
-      method: 'GET',
+    const apiUrl = process.env.API_URL
+    const apiKey = process.env.API_KEY
+
+    const resp = await fetch(`${apiUrl}/auth?didSession=${didSession}`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        authorization: `Bearer ${didSession}`,
+        'x-api-key': apiKey ?? '',
       },
+      body: JSON.stringify({
+        didSession,
+      }),
     })
-    if (resp.ok) {
-      const { key } = await resp.json()
-      return json({ apikey: key })
+    const data = await resp.json()
+    const { token, refreshToken } = data
+
+    if (token === null || token === undefined) {
+      return json({ authTokenError: 'Invalid auth token' })
     }
 
-    if (apikey) {
-      const resp = await fetch(`${process.env.API_URL}/apikey/${apikey}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          authorization: `Bearer ${didSession}`,
-        },
-      })
-      const { ok } = await resp.json()
-      if (!ok) {
-        return json({ apikeyError: 'Invalid API Key' })
-      }
-    }
+    return json({ user, token, refreshToken })
   }
 
-  return null
+  return json({ user })
 }
 
 export default function LoginIndexRoute() {
-  const { isConnected } = useAccount()
-  const fetcher = useFetcher<{
-    didSessionError?: string
-    apikeyError?: string
-    apikey?: string
-  } | null>()
+  const { user } = useLoaderData<typeof loader>()
+  const fetcher = useFetcher<FetcherData>()
+  const submit = useSubmit()
 
-  async function handleSignout() {
-    fetcher.submit({}, { method: 'post', action: '/action/auth/logout' })
-  }
-
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between gap-y-12 p-24">
-      <div className="w-full max-w-7xl items-start justify-between lg:flex">
-        <div className="space-y-6 max-lg:flex max-lg:flex-col max-lg:items-center">
-          <Link to="/">
-            <IntuitionLogotype />
-          </Link>
-          <p className="bg-gray-50/5 cursor-default rounded-md border border-stone-800/50 px-3 py-2 font-mono text-sm backdrop-blur-sm">
-            Get started by authenticating your{' '}
-            <span className="font-bold text-success-500">DID Session</span> and{' '}
-            <span className="font-bold text-success-500">API Key</span>
-          </p>
-        </div>
-        <div className="mt-4 flex flex-col items-end gap-4 max-lg:items-center max-lg:justify-center">
-          {!isConnected ? (
-            <div className="m-auto">
-              <AccountButton handleSignout={handleSignout} />
-            </div>
-          ) : (
-            <div className="m-auto">
-              <LoginForm fetcher={fetcher} />
-            </div>
-          )}
-        </div>
-      </div>
-    </main>
-  )
-}
-
-interface LoginFormProps {
-  fetcher: FetcherWithComponents<any>
-}
-
-export function LoginForm({ fetcher }: LoginFormProps) {
-  const navigation = useNavigation()
   const { isConnected, address } = useAccount()
+  const { chain } = useNetwork()
+  const { switchNetwork } = useSwitchNetwork()
+  const { disconnect } = useDisconnect()
   const { data: walletClient } = useWalletClient()
 
+  const [hasSigned, setHasSigned] = useState<boolean>(false)
   const [didSession, setDidSession] = useState<string>('')
-  const [apikey, setApikey] = useState<string>('')
-  const [wallet, setWallet] = useState<string>('')
-
-  const asyncValidationErrors = fetcher.data
-  console.log('didSession', didSession)
 
   async function signMessage() {
     try {
-      const didSesh = await newDIDSessionFromWalletClient({
-        account: walletClient?.account!,
-        signMessage: walletClient?.signMessage!,
-      })
-      setDidSession(didSesh.serialize())
-      fetcher.load(`/login?index&didSession=${didSesh.serialize()}`)
+      if (walletClient) {
+        const didSesh = await newDIDSessionFromWalletClient({
+          account: walletClient?.account,
+          signMessage: walletClient?.signMessage,
+        })
+        setDidSession(didSesh.serialize())
+        setHasSigned(true)
+        fetcher.load(`/login?index&didSession=${didSesh.serialize()}`)
+      }
     } catch (e) {
       window.alert(e)
-
-      if (e instanceof Error) {
-        return json({ status: 'error' } as const, {})
-      }
+      disconnect()
+      fetcher.submit({}, { method: 'post', action: '/actions/auth/logout' })
     }
   }
 
-  useEffect(() => {
-    setWallet(address as string)
-  }, [address])
+  async function handleSignOut() {
+    setHasSigned(false)
+    disconnect()
+    fetcher.submit({}, { method: 'post', action: '/actions/auth/logout' })
+  }
+  function handleLogin() {
+    let formData = new FormData()
+    formData.set('didSession', didSession)
+    formData.set('wallet', walletClient?.account?.address as string)
+    submit(formData, {
+      method: 'post',
+    })
+  }
 
   useEffect(() => {
-    if (fetcher.state === 'idle') {
-      if (fetcher.data && fetcher.data.apikey) {
-        setApikey(fetcher.data.apikey)
-      }
+    if (!user && isConnected && walletClient?.account.address) {
+      signMessage()
     }
-  }, [fetcher.state])
+    if (!isConnected || (isConnected && user && user.wallet !== address)) {
+      if (isConnected) handleSignOut()
+    }
+  }, [user, isConnected, walletClient])
 
+  // Detect Wrong Network
   useEffect(() => {
-    if (!isConnected) {
-      setDidSession('')
-      setApikey('')
-      setWallet('')
+    if (chain !== optimismSepolia && switchNetwork) {
+      switchNetwork(optimismSepolia.id)
     }
-  }, [isConnected])
+  }, [chain, switchNetwork])
+
+  // Trigger remix auth action if user has a did session and has signed
+  useEffect(() => {
+    if (hasSigned && didSession) {
+      handleLogin()
+    }
+  }, [hasSigned, didSession])
 
   return (
-    <Card className="max-w-xs pb-8 pt-4">
-      <div className="space-y-4">
-        <div
-          className={cn(
-            'container space-y-2',
-            !isConnected ? 'pointer-events-none opacity-20' : '',
-          )}
-        >
-          <Label className="m-x-auto text-sm text-foreground">
-            Authentication
-          </Label>
-          <Form schema={schema}>
-            {({ Field, Errors, Error, Button, register, clearErrors }) => (
-              <>
-                <Field name="didSession" label="DID Session">
-                  {({ Label, Errors, errors }) => (
-                    <>
-                      <Label />
-                      <BaseButton
-                        data-hidden={!!didSession}
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={signMessage}
-                        className="block w-full data-[hidden=true]:hidden"
-                      >
-                        Sign Message
-                      </BaseButton>
-                      <Input
-                        data-hidden={!didSession}
-                        readOnly={!!didSession}
-                        placeholder="Your Serialized DID Session String"
-                        {...register('didSession')}
-                        value={didSession}
-                        onChange={(event) => {
-                          clearErrors('didSession')
-
-                          fetcher.load(
-                            `/login?index&didSession=${event.target.value}`,
-                          )
-                        }}
-                        className={`${!didSession && 'hidden'} font-mono`}
-                        startAdornment={
-                          didSession && (
-                            <>
-                              <Copy text={didSession} />
-                            </>
-                          )
-                        }
-                        endAdornment={
-                          didSession && (
-                            <>
-                              <CheckCircle2
-                                className="h-4 w-4 fill-success-500"
-                                color="black"
-                              />
-                            </>
-                          )
-                        }
-                      />
-                      {!errors && !asyncValidationErrors?.didSessionError && (
-                        <div className="text-primary-400 text-xs">
-                          Use your serialized did session string in the
-                          'authorization' header when making API calls.
-                        </div>
-                      )}
-
-                      <Errors />
-                      {asyncValidationErrors &&
-                        asyncValidationErrors.didSessionError && (
-                          <Error>{asyncValidationErrors.didSessionError}</Error>
-                        )}
-                    </>
-                  )}
-                </Field>
-                <Field name="apikey" label="API Key">
-                  {({ Label, Errors, errors }) => (
-                    <>
-                      <Label />
-                      <Input
-                        {...register('apikey')}
-                        disabled={
-                          !didSession ||
-                          (!!asyncValidationErrors &&
-                            !!asyncValidationErrors?.didSessionError)
-                        }
-                        value={apikey}
-                        onChange={(event) => {
-                          clearErrors('apikey')
-                          setApikey(event.target.value)
-                          fetcher.load(
-                            `/login?index&didSession=${didSession}&apikey=${event.target.value}`,
-                          )
-                        }}
-                        className="font-mono"
-                        startAdornment={
-                          apikey && (
-                            <>
-                              <Copy text={apikey} />
-                            </>
-                          )
-                        }
-                        endAdornment={
-                          apikey && (
-                            <>
-                              <CheckCircle2
-                                className="h-4 w-4 fill-success-500"
-                                color="black"
-                              />
-                            </>
-                          )
-                        }
-                        placeholder="00000000-0000-0000-0000-000000000000"
-                      />
-                      {!errors && !asyncValidationErrors?.apikeyError && (
-                        <div className="text-primary-400 text-xs">
-                          Use your api key in the 'x-api-key' header when making
-                          API calls.
-                        </div>
-                      )}
-                      <Errors />
-                      {asyncValidationErrors &&
-                        asyncValidationErrors.apikeyError && (
-                          <Error>{asyncValidationErrors.apikeyError}</Error>
-                        )}
-                    </>
-                  )}
-                </Field>
-                <Field
-                  name="wallet"
-                  label="Wallet"
-                  value={wallet}
-                  className="hidden"
-                >
-                  {({ Label }) => (
-                    <>
-                      <Label />
-                      <Input
-                        {...register('wallet')}
-                        disabled={!wallet}
-                        value={wallet}
-                        onChange={(event) => {
-                          clearErrors('wallet')
-                          setWallet(event.target.value)
-                        }}
-                        className="font-mono"
-                      />
-                    </>
-                  )}
-                </Field>
-                <Errors />
-                <Button>
-                  {navigation.state === 'idle'
-                    ? 'Authenticate'
-                    : ' Authenticating'}
-                </Button>
-              </>
-            )}
-          </Form>
-        </div>
+    <main className="flex min-h-screen flex-col items-center gap-y-12 p-8">
+      <Header user={user} />
+      <div className="mt-32 flex h-full w-full flex-col items-center gap-8">
+        <Card className="flex w-[92vw] max-w-[728px] flex-col items-center gap-8 p-16 text-center">
+          <img src={templateAppIcon} className="h-24 w-24" />
+          <div className="space-y-4">
+            <h4 className="text-3xl font-semibold leading-none">
+              Sign in to Intuition
+            </h4>
+            <div className="opacity-70">Connect your wallet to get started</div>
+          </div>
+          <ConnectButton size="lg" user={user} />
+        </Card>
+        <GetStarted />
       </div>
-    </Card>
+    </main>
   )
 }
