@@ -2,7 +2,7 @@ import { redirect, type LoaderFunctionArgs } from '@remix-run/node'
 import { Outlet } from '@remix-run/react'
 
 export async function loader({}: LoaderFunctionArgs) {
-  return redirect('/app')
+  throw redirect('/app', 302)
 }
 
 export default function Index() {

@@ -79,10 +79,14 @@ export async function logout(request: Request) {
   await authenticator.logout(request, { redirectTo: '/login' })
 }
 
-export async function requireAuthedUser(request: Request) {
+export const requireAuthedUser = async <TRequest extends Request>(
+  request: TRequest,
+) => {
   const user = await authenticator.isAuthenticated(request)
-  if (user) return await Promise.resolve(user)
-  return redirect('/login')
+  if (!user) {
+    throw redirect('/login', 302)
+  }
+  return user
 }
 
 export async function isAuthedUser(request: Request) {
