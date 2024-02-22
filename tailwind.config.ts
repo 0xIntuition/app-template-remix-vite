@@ -29,10 +29,10 @@ module.exports = {
         link: 'var(--link)',
 
         // ShadCN colors
-        primary: 'var(--base)',
-        'primary-foreground': 'var(--foreground)',
-        destructive: 'var(--error-600)',
-        'primary-foreground': 'var(--foreground)',
+        // primary: 'var(--base)',
+        // 'primary-foreground': 'var(--foreground)',
+        // destructive: 'var(--error-600)',
+        // 'primary-foreground': 'var(--foreground)',
         accent: 'rgba(255,255,255,0.05)',
         'accent-foreground': 'var(--foreground)',
         input: 'var(--primary-700)',

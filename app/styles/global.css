@@ -72,7 +72,7 @@
 
 @layer components {
   .tooltip {
-    @apply bg-primary-950 text-primary-200 z-50 box-border w-max max-w-[100vw-10px] space-y-1 rounded-md border border-slate-100/20 px-2.5 py-1 text-xs font-medium shadow-md shadow-black/5 ring-1 ring-black/5 backdrop-blur-md transition ease-in-out;
+    @apply z-50 box-border w-max max-w-[100vw-10px] space-y-1 rounded-md border border-slate-100/20 bg-primary-950 px-2.5 py-1 text-xs font-medium text-primary-200 shadow-md shadow-black/5 ring-1 ring-black/5 backdrop-blur-md transition ease-in-out;
   }
 
   html {
