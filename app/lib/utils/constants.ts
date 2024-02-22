@@ -10,3 +10,6 @@ export const DEFAULT_STRATEGY_OPTIONS = {
 
 export const MULTIVAULT_CONTRACT_ADDRESS =
   '0x5a4E28Aa014237a9997c6E8F597E5f0076083eF3' // TODO: Change this to NEW IMPLEMENTATION
+
+export const DOCUMENTATION_URL = 'https://docs.intuition.systems/'
+export const EXAMPLES_URL = 'https://docs.intuition.systems/example-apps/'
