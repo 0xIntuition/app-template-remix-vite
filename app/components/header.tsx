@@ -1,7 +1,7 @@
 import { Link, useFetcher } from '@remix-run/react'
 import IntuitionLogotype from '@/assets/intuition-logotype'
 import { useDisconnect } from 'wagmi'
-import templateBadge from '@images/template-badge.png'
+import templateBadge from '../../src/images/template-badge.png'
 import { AccountButton } from './account-button'
 import { User } from 'types/user'
 

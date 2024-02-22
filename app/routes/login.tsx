@@ -12,15 +12,13 @@ import {
   useWalletClient,
 } from 'wagmi'
 import { z } from 'zod'
-
 import { ConnectButton } from '@/components/connect-button'
 import Header from '@/components/header'
 import { Card } from '@/components/ui/card'
 import { isAuthedUser, login } from '@/lib/services/auth.server'
 import { formAction } from '@/lib/services/form.server'
 import { newDIDSessionFromWalletClient } from '@/lib/utils/siwe'
-import templateAppIcon from '@images/app-template-logo.png'
-
+import templateAppIcon from '../../src/images/app-template-logo.png'
 import { User } from 'types/user'
 import GetStarted from '@/components/get-started'
 
