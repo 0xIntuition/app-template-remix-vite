@@ -1,12 +1,10 @@
 import { useNonce } from '@/lib/utils/nonce-provider'
-import styles from '@/styles/global.css'
-
+import '@/styles/global.css'
 import {
   RainbowKitProvider,
   darkTheme,
   getDefaultWallets,
 } from '@rainbow-me/rainbowkit'
-import rainbowStylesUrl from '@rainbow-me/rainbowkit/styles.css'
 import {
   MetaFunction,
   json,
@@ -26,10 +24,7 @@ import React, { useState } from 'react'
 import { WagmiConfig, configureChains, createConfig, mainnet } from 'wagmi'
 import { optimismSepolia } from 'wagmi/chains'
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
-
-export const links: LinksFunction = () => [
-  { rel: 'stylesheet', href: rainbowStylesUrl },
-]
+import '@rainbow-me/rainbowkit/styles.css'
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [
