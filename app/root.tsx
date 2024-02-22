@@ -1,5 +1,4 @@
 import { useNonce } from '@/lib/utils/nonce-provider'
-import '@/styles/global.css'
 import {
   RainbowKitProvider,
   darkTheme,
@@ -24,6 +23,7 @@ import React, { useState } from 'react'
 import { WagmiConfig, configureChains, createConfig, mainnet } from 'wagmi'
 import { optimismSepolia } from 'wagmi/chains'
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
+import '@/styles/global.css'
 import '@rainbow-me/rainbowkit/styles.css'
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -67,12 +67,6 @@ function Document({
       </head>
       <body>
         {children}
-        <script
-          nonce={nonce}
-          dangerouslySetInnerHTML={{
-            __html: `window.ENV = ${JSON.stringify(env)}`,
-          }}
-        />
         <ScrollRestoration />
         <Scripts />
       </body>
