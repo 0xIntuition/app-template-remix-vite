@@ -7,7 +7,6 @@ import {
   getDefaultWallets,
 } from '@rainbow-me/rainbowkit'
 import rainbowStylesUrl from '@rainbow-me/rainbowkit/styles.css'
-import { cssBundleHref } from '@remix-run/css-bundle'
 import {
   MetaFunction,
   json,
@@ -29,9 +28,7 @@ import { optimismSepolia } from 'wagmi/chains'
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
 
 export const links: LinksFunction = () => [
-  { rel: 'stylesheet', href: styles },
   { rel: 'stylesheet', href: rainbowStylesUrl },
-  ...(cssBundleHref ? [{ rel: 'stylesheet', href: cssBundleHref }] : []),
 ]
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -83,7 +80,6 @@ function Document({
         />
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   )
@@ -139,7 +135,7 @@ export default function App() {
                   <Outlet />
                 </div>
                 <div
-                  className="bg-grid-white/[0.05] absolute inset-0 z-0 border-b border-slate-100/5 bg-bottom"
+                  className="absolute inset-0 z-0 border-b border-slate-100/5 bg-bottom bg-grid-white/[0.05]"
                   style={{
                     maskImage:
                       'linear-gradient(to top left, transparent, black)',
