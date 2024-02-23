@@ -4,15 +4,9 @@ import {
   darkTheme,
   getDefaultWallets,
 } from '@rainbow-me/rainbowkit'
-import {
-  MetaFunction,
-  json,
-  type DataFunctionArgs,
-  type LinksFunction,
-} from '@remix-run/node'
+import { MetaFunction, json, LoaderFunctionArgs } from '@remix-run/node'
 import {
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
@@ -37,7 +31,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   ]
 }
 
-export async function loader({ request }: DataFunctionArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   return json({
     ENV: {
       ALCHEMY_API_KEY: process.env.ALCHEMY_API_KEY,
