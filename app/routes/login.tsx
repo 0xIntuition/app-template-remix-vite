@@ -30,13 +30,6 @@ const mutation = makeDomainFunction(schema)(async (values) => {
   return values
 })
 
-interface FetcherData {
-  didSessionError?: string
-  user?: User
-  token?: string
-  refreshToken?: string
-}
-
 export const action = async ({ request }: ActionFunctionArgs) => {
   const resp = await formAction({
     request,
@@ -51,44 +44,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export const loader: LoaderFunction = async ({ request }) => {
   const user = await isAuthedUser(request)
-  const url = new URL(request.url)
-  const didSession = url.searchParams.get('didSession')
-
-  if (didSession) {
-    const session = await DIDSession.fromSession(didSession)
-    if (session === null || session === undefined) {
-      return json({ didSessionError: 'Invalid DID Session' })
-    }
-
-    const apiUrl = process.env.API_URL
-    const apiKey = process.env.API_KEY
-
-    const resp = await fetch(`${apiUrl}/auth?didSession=${didSession}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey ?? '',
-      },
-      body: JSON.stringify({
-        didSession,
-      }),
-    })
-    const data = await resp.json()
-    const { token, refreshToken } = data
-
-    if (token === null || token === undefined) {
-      return json({ authTokenError: 'Invalid auth token' })
-    }
-
-    return json({ user, token, refreshToken })
-  }
-
   return json({ user })
 }
 
 export default function LoginIndexRoute() {
   const { user } = useLoaderData<typeof loader>()
-  const fetcher = useFetcher<FetcherData>()
+  const fetcher = useFetcher()
   const submit = useSubmit()
 
   const { isConnected, address } = useAccount()
@@ -109,7 +70,6 @@ export default function LoginIndexRoute() {
         })
         setDidSession(didSesh.serialize())
         setHasSigned(true)
-        fetcher.load(`/login?index&didSession=${didSesh.serialize()}`)
       }
     } catch (e) {
       window.alert(e)
