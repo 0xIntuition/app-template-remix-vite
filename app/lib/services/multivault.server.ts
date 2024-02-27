@@ -11,8 +11,6 @@ export type MultivaultConfig = {
   exit_fee: string
   formatted_exit_fee: string
   protocol_fee: string
-  admin: string
-  protocol_vault: string
   fee_denominator: string
   min_deposit: string
   min_share: string
@@ -68,8 +66,6 @@ export async function getMultiVaultConfig() {
       : undefined,
   }))
 
-  const admin = resp[0].result[0] as `0x${string}`
-  const protocol_vault = resp[0].result[1] as `0x${string}`
   const fee_denominator = resp[0].result[2] as bigint
   const formatted_fee_denominator = formatUnits(fee_denominator, 18)
   const min_deposit = resp[0].result[3] as bigint
@@ -92,8 +88,6 @@ export async function getMultiVaultConfig() {
   const formatted_atom_equity_fee = formatUnits(atom_equity_fee, 18)
 
   return {
-    admin,
-    protocol_vault,
     fee_denominator: fee_denominator.toString(),
     formatted_fee_denominator,
     min_deposit: min_deposit.toString(),
