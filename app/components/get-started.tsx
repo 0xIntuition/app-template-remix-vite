@@ -15,7 +15,7 @@ export default function GetStarted() {
     <div className="flex flex-col items-center space-y-12">
       <div className="tracking-wide">
         <span className="opacity-70">Get started by editing </span>
-        <span className="font-semibold text-green-500">/app/page.tsx</span>
+        <span className="font-semibold text-green-500">/app/_index.tsx</span>
       </div>
       <div className="flex items-center gap-8">
         <TooltipProvider>
