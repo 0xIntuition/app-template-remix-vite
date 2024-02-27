@@ -23,7 +23,7 @@ export default function ContractDataPage() {
       <Header user={user} />
       <div className="flex h-full flex-col items-center pt-[32vh]">
         <span className="opacity-70">
-          Atom Cost: {multivaultLoaderData.atom_cost}
+          Atom Cost From the Server: {multivaultLoaderData.atom_cost}
         </span>
       </div>
     </main>
