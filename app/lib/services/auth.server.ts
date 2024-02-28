@@ -17,7 +17,6 @@ authenticator.use(
   new FormStrategy(async ({ form }) => {
     let didSession = form.get('didSession')
     let wallet = form.get('wallet')
-    // let accessClaim = form.get('accessClaim')
     // Validate the inputs
     invariant(
       typeof didSession === 'string',
@@ -26,8 +25,6 @@ authenticator.use(
     invariant(didSession.length > 0, 'DID Session must not be empty')
     invariant(typeof wallet === 'string', 'Wallet must be a string')
     invariant(wallet.length > 0, 'Wallet must not be empty')
-    // invariant(typeof accessClaim === 'string', 'Access Claim must be a string')
-    // invariant(accessClaim.length > 0, 'Access Claim must not be empty')
 
     // login the user
     let user = await authenticate(didSession, wallet)
@@ -45,27 +42,9 @@ export async function authenticate(
     throw new Error('Invalid DID Session')
   }
 
-  const isAuthed = await fetch(`${process.env.API_URL}/auth`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.API_KEY!,
-    },
-    body: JSON.stringify({
-      didSession,
-    }),
-  })
-  if (!isAuthed.ok) {
-    throw new Error('Not authorized')
-  }
-
-  const { token, refreshToken } = await isAuthed.json()
-
   return {
     didSession,
     wallet,
-    token,
-    refreshToken,
   }
 }
 
