@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useFetcher, useLoaderData, useSubmit } from '@remix-run/react'
 import { ActionFunctionArgs, LoaderFunction, json } from '@remix-run/node'
-import { DIDSession } from 'did-session'
 import { makeDomainFunction } from 'domain-functions'
 import { optimismSepolia } from 'viem/chains'
 import {
@@ -19,7 +18,6 @@ import { isAuthedUser, login } from '@/lib/services/auth.server'
 import { formAction } from '@/lib/services/form.server'
 import { newDIDSessionFromWalletClient } from '@/lib/utils/siwe'
 import templateAppIcon from '../../src/images/app-template-logo.png'
-import { User } from 'types/user'
 import GetStarted from '@/components/get-started'
 
 const schema = z.object({
