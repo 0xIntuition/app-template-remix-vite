@@ -89,7 +89,7 @@ export function AccountButton({
                     >
                       <div className="flex items-center gap-1">
                         <MetaMaskAvatar
-                          address="0xb01F14d1C9000D453241221EB54648F1C378c970"
+                          address={account?.address || ''}
                           size={40}
                           className="rounded-full"
                         />
@@ -99,7 +99,7 @@ export function AccountButton({
                   <DropdownMenuContent align="end" className="bg-popover w-48">
                     <DropdownMenuLabel className="flex items-center gap-2">
                       <div className="space-y-1">
-                        <div className="text-primary-500 text-sm font-normal">
+                        <div className="text-sm font-normal text-primary-500">
                           Signed in as:
                         </div>
                         <div className="font-semibold">
