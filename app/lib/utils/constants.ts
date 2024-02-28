@@ -9,7 +9,7 @@ export const DEFAULT_STRATEGY_OPTIONS = {
 }
 
 export const MULTIVAULT_CONTRACT_ADDRESS =
-  '0x5dF55A1f34bA50FDDc678acB3b20fDd52aFd578F'
+  '0x102AAAD6b67B0cE1D00e08bF0cBF27eD53fe3587'
 
 export const DOCUMENTATION_URL = 'https://docs.intuition.systems/'
 export const EXAMPLES_URL = 'https://docs.intuition.systems/example-apps/'
