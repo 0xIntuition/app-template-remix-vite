@@ -9,13 +9,13 @@ Learn more about Remix-Vite in the [Remix Documentation](https://remix.run/docs/
 
 ## Getting Started
 
-### Prerequisites:
+### Prerequisites
 
 Node.js: Before anything else, Remix.run requires that you have either a Active or Maintenance version of Node.js installed. [Remix Documentation](https://remix.run/docs/en/main/other-api/node)
 
 Optimism Sepolia: Intuition is currently deployed on Optimism Sepolia Testnet. To interact with the Intuition API, you'll need to connect to the [Optimism Sepolia Testnet](https://docs.optimism.io/chain/networks).
 
-### Network Configuration:
+### Network Configuration
 
 | Parameter                     | Value                                     |
 | ----------------------------- | ----------------------------------------- |
