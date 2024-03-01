@@ -1,4 +1,4 @@
-import { useReducer, type Reducer } from 'react'
+import { type Reducer, useReducer } from "react";
 
 /**
  * This hook takes in a reducer and an initial state and returns the state and dispatch function. It's a generic hook that can be used for any reducer and initial state.
@@ -13,71 +13,69 @@ import { useReducer, type Reducer } from 'react'
  */
 
 export type DefaultTransactionState = {
-  status: DefaultTxState
-  txHash?: `0x${string}`
-  error?: string
-}
+	status: DefaultTxState;
+	txHash?: `0x${string}`;
+	error?: string;
+};
 
 type DefaultTxState =
-  | 'idle'
-  | 'transaction-signing'
-  | 'transaction-progress'
-  | 'transaction-complete'
-  | 'transaction-error'
+	| "idle"
+	| "transaction-signing"
+	| "transaction-progress"
+	| "transaction-complete"
+	| "transaction-error";
 
 type DefaultTxActionType =
-  | { type: 'START_TRANSACTION' }
-  | { type: 'TRANSACTION_SIGNING' }
-  | { type: 'TRANSACTION_PROGRESS' }
-  | { type: 'TRANSACTION_COMPLETE'; txHash?: `0x${string}` }
-  | { type: 'TRANSACTION_ERROR'; error: string }
+	| { type: "START_TRANSACTION" }
+	| { type: "TRANSACTION_SIGNING" }
+	| { type: "TRANSACTION_PROGRESS" }
+	| { type: "TRANSACTION_COMPLETE"; txHash?: `0x${string}` }
+	| { type: "TRANSACTION_ERROR"; error: string };
 
-const defaultTxReducer: Reducer<
-  DefaultTransactionState,
-  DefaultTxActionType
-> = (state: DefaultTransactionState, action: DefaultTxActionType) => {
-  switch (action.type) {
-    case 'START_TRANSACTION':
-      return { ...state, status: 'idle' }
-    case 'TRANSACTION_SIGNING':
-      return { ...state, status: 'transaction-signing' }
-    case 'TRANSACTION_PROGRESS':
-      return { ...state, status: 'transaction-progress' }
-    case 'TRANSACTION_COMPLETE':
-      return {
-        ...state,
-        status: 'transaction-complete',
-        txHash: action.txHash,
-      }
-    case 'TRANSACTION_ERROR':
-      return { ...state, status: 'transaction-error', error: action.error }
-    default:
-      return state
-  }
-}
+const defaultTxReducer: Reducer<DefaultTransactionState, DefaultTxActionType> =
+	(state: DefaultTransactionState, action: DefaultTxActionType) => {
+		switch (action.type) {
+			case "START_TRANSACTION":
+				return { ...state, status: "idle" };
+			case "TRANSACTION_SIGNING":
+				return { ...state, status: "transaction-signing" };
+			case "TRANSACTION_PROGRESS":
+				return { ...state, status: "transaction-progress" };
+			case "TRANSACTION_COMPLETE":
+				return {
+					...state,
+					status: "transaction-complete",
+					txHash: action.txHash,
+				};
+			case "TRANSACTION_ERROR":
+				return { ...state, status: "transaction-error", error: action.error };
+			default:
+				return state;
+		}
+	};
 
 const defaultInitialTransactionState: DefaultTransactionState = {
-  status: 'idle',
-}
+	status: "idle",
+};
 
 function useGenericTxState(): {
-  state: DefaultTransactionState
-  dispatch: React.Dispatch<DefaultTxActionType>
-}
+	state: DefaultTransactionState;
+	dispatch: React.Dispatch<DefaultTxActionType>;
+};
 function useGenericTxState<S, A>(
-  reducer: Reducer<S, A>,
-  initialState: S,
+	reducer: Reducer<S, A>,
+	initialState: S,
 ): {
-  state: S
-  dispatch: React.Dispatch<A>
-}
+	state: S;
+	dispatch: React.Dispatch<A>;
+};
 
 function useGenericTxState<S, A>(reducer?: Reducer<S, A>, initialState?: S) {
-  const [state, dispatch] = useReducer(
-    reducer ?? defaultTxReducer,
-    initialState ?? defaultInitialTransactionState,
-  )
-  return { state, dispatch }
+	const [state, dispatch] = useReducer(
+		reducer ?? defaultTxReducer,
+		initialState ?? defaultInitialTransactionState,
+	);
+	return { state, dispatch };
 }
 
-export default useGenericTxState
+export default useGenericTxState;
