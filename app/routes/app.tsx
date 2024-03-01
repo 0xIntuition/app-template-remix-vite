@@ -6,28 +6,28 @@ import { User } from "types/user";
 import { useAccount, useDisconnect } from "wagmi";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	const user = (await requireAuthedUser(request)) as User;
-	return json({
-		authedWallet: user.wallet as `0x${string}`,
-	});
+  const user = (await requireAuthedUser(request)) as User;
+  return json({
+    authedWallet: user.wallet as `0x${string}`,
+  });
 }
 
 export default function AppLayout() {
-	const { authedWallet } = useLoaderData<typeof loader>();
-	const fetcher = useFetcher();
-	const { isConnected, address } = useAccount();
-	const { disconnect } = useDisconnect();
+  const { authedWallet } = useLoaderData<typeof loader>();
+  const fetcher = useFetcher();
+  const { isConnected, address } = useAccount();
+  const { disconnect } = useDisconnect();
 
-	useEffect(() => {
-		if (!isConnected || address !== authedWallet) {
-			disconnect();
-			fetcher.submit({}, { method: "post", action: "/actions/auth/logout" });
-		}
-	}, [isConnected, address]);
+  useEffect(() => {
+    if (!isConnected || address !== authedWallet) {
+      disconnect();
+      fetcher.submit({}, { method: "post", action: "/actions/auth/logout" });
+    }
+  }, [isConnected, address, authedWallet, disconnect, fetcher]);
 
-	return (
-		<>
-			<Outlet />
-		</>
-	);
+  return (
+    <>
+      <Outlet />
+    </>
+  );
 }
