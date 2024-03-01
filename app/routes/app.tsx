@@ -1,7 +1,6 @@
 import { Outlet, useFetcher, useLoaderData } from '@remix-run/react'
 import { useEffect } from 'react'
-import { useAccount } from 'wagmi'
-import { disconnect } from '@wagmi/core'
+import { useAccount, useDisconnect } from 'wagmi'
 import { LoaderFunctionArgs, json } from '@remix-run/node'
 import { requireAuthedUser } from '@/lib/services/auth.server'
 import { User } from 'types/user'
@@ -17,6 +16,7 @@ export default function AppLayout() {
   const { authedWallet } = useLoaderData<typeof loader>()
   const fetcher = useFetcher()
   const { isConnected, address } = useAccount()
+  const { disconnect } = useDisconnect()
 
   useEffect(() => {
     if (!isConnected || address !== authedWallet) {
