@@ -4,6 +4,7 @@ node_modules
 /build
 /public/build
 .env
+.envrc
 
 .DS_Store
 **/.DS_Store
