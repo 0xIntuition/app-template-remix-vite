@@ -22,6 +22,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "did-session": "^2.0.1",
+    "domain-functions": "^2.5.5",
     "isbot": "^3.6.8",
     "lucide-react": "^0.268.0",
     "react": "^18.2.0",
