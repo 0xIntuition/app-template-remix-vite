@@ -25,6 +25,7 @@
     "domain-functions": "^2.5.5",
     "isbot": "^3.8.0",
     "lucide-react": "^0.268.0",
+    "million": "^3.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-metamask-avatar": "^2.0.9",
