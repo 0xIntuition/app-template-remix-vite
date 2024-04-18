@@ -1,8 +1,13 @@
 export const multivaultAbi = [
   { inputs: [], type: 'error', name: 'MultiVault_AdminOnly' },
-  { inputs: [], type: 'error', name: 'MultiVault_AlreadyInitialized' },
   { inputs: [], type: 'error', name: 'MultiVault_ArraysNotSameLength' },
   { inputs: [], type: 'error', name: 'MultiVault_AtomDoesNotExist' },
+  {
+    inputs: [{ internalType: 'bytes', name: 'atomUri', type: 'bytes' }],
+    type: 'error',
+    name: 'MultiVault_AtomExists',
+  },
+  { inputs: [], type: 'error', name: 'MultiVault_AtomUriTooLong' },
   { inputs: [], type: 'error', name: 'MultiVault_BurnFromZeroAddress' },
   { inputs: [], type: 'error', name: 'MultiVault_BurnInsufficientBalance' },
   { inputs: [], type: 'error', name: 'MultiVault_DeployAccountFailed' },
@@ -15,14 +20,31 @@ export const multivaultAbi = [
     name: 'MultiVault_InsufficientDepositAmountToCoverFees',
   },
   {
-    inputs: [],
+    inputs: [
+      { internalType: 'uint256', name: 'remainingShares', type: 'uint256' },
+    ],
     type: 'error',
     name: 'MultiVault_InsufficientRemainingSharesInVault',
   },
+  { inputs: [], type: 'error', name: 'MultiVault_InsufficientSharesInVault' },
+  { inputs: [], type: 'error', name: 'MultiVault_InvalidExitFee' },
   { inputs: [], type: 'error', name: 'MultiVault_InvalidFeeSet' },
   { inputs: [], type: 'error', name: 'MultiVault_MinimumDeposit' },
-  { inputs: [], type: 'error', name: 'MultiVault_NotAtomCreator' },
+  { inputs: [], type: 'error', name: 'MultiVault_OperationAlreadyExecuted' },
+  { inputs: [], type: 'error', name: 'MultiVault_OperationAlreadyScheduled' },
+  { inputs: [], type: 'error', name: 'MultiVault_OperationNotScheduled' },
+  { inputs: [], type: 'error', name: 'MultiVault_ReceiveNotAllowed' },
+  { inputs: [], type: 'error', name: 'MultiVault_TimelockNotExpired' },
   { inputs: [], type: 'error', name: 'MultiVault_TransferFailed' },
+  {
+    inputs: [
+      { internalType: 'uint256', name: 'subjectId', type: 'uint256' },
+      { internalType: 'uint256', name: 'predicateId', type: 'uint256' },
+      { internalType: 'uint256', name: 'objectId', type: 'uint256' },
+    ],
+    type: 'error',
+    name: 'MultiVault_TripleExists',
+  },
   { inputs: [], type: 'error', name: 'MultiVault_VaultDoesNotExist' },
   { inputs: [], type: 'error', name: 'MultiVault_VaultIsTriple' },
   { inputs: [], type: 'error', name: 'MultiVault_VaultNotAtom' },
@@ -93,7 +115,32 @@ export const multivaultAbi = [
       { internalType: 'uint256', name: 'id', type: 'uint256', indexed: false },
     ],
     type: 'event',
-    name: 'Deposit',
+    name: 'Deposited',
+    anonymous: false,
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'sender',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        internalType: 'address',
+        name: 'protocolVault',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    type: 'event',
+    name: 'FeesTransferred',
     anonymous: false,
   },
   {
@@ -108,43 +155,13 @@ export const multivaultAbi = [
     inputs: [
       {
         internalType: 'address',
-        name: 'creator',
+        name: 'account',
         type: 'address',
-        indexed: true,
-      },
-      {
-        internalType: 'uint256',
-        name: 'subjectId',
-        type: 'uint256',
-        indexed: false,
-      },
-      {
-        internalType: 'uint256',
-        name: 'predicateId',
-        type: 'uint256',
-        indexed: false,
-      },
-      {
-        internalType: 'uint256',
-        name: 'objectId',
-        type: 'uint256',
-        indexed: false,
-      },
-      {
-        internalType: 'uint256',
-        name: 'vaultID',
-        type: 'uint256',
-        indexed: false,
-      },
-      {
-        internalType: 'uint256',
-        name: 'tripleAtomVaultId',
-        type: 'uint256',
         indexed: false,
       },
     ],
     type: 'event',
-    name: 'TripleCreated',
+    name: 'Paused',
     anonymous: false,
   },
   {
@@ -188,15 +205,73 @@ export const multivaultAbi = [
       { internalType: 'uint256', name: 'id', type: 'uint256', indexed: false },
     ],
     type: 'event',
-    name: 'Withdraw',
+    name: 'Redeemed',
     anonymous: false,
   },
   {
-    inputs: [{ internalType: 'uint256', name: 'id', type: 'uint256' }],
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'creator',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        internalType: 'uint256',
+        name: 'subjectId',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        internalType: 'uint256',
+        name: 'predicateId',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        internalType: 'uint256',
+        name: 'objectId',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        internalType: 'uint256',
+        name: 'vaultID',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    type: 'event',
+    name: 'TripleCreated',
+    anonymous: false,
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'account',
+        type: 'address',
+        indexed: false,
+      },
+    ],
+    type: 'event',
+    name: 'Unpaused',
+    anonymous: false,
+  },
+  { inputs: [], stateMutability: 'payable', type: 'fallback' },
+  {
+    inputs: [],
     stateMutability: 'view',
     type: 'function',
-    name: 'assertTriple',
-    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    name: 'SET_ADMIN',
+    outputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
+  },
+  {
+    inputs: [],
+    stateMutability: 'view',
+    type: 'function',
+    name: 'SET_EXIT_FEE',
+    outputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
   },
   {
     inputs: [],
@@ -204,7 +279,7 @@ export const multivaultAbi = [
     type: 'function',
     name: 'atomConfig',
     outputs: [
-      { internalType: 'uint256', name: 'atomCost', type: 'uint256' },
+      { internalType: 'uint256', name: 'atomShareLockFee', type: 'uint256' },
       { internalType: 'uint256', name: 'atomCreationFee', type: 'uint256' },
     ],
   },
@@ -215,29 +290,29 @@ export const multivaultAbi = [
     ],
     stateMutability: 'view',
     type: 'function',
-    name: 'atomEquityFeeAmount',
-    outputs: [{ internalType: 'uint256', name: 'feeAmount', type: 'uint256' }],
-  },
-  {
-    inputs: [{ internalType: 'bytes', name: '', type: 'bytes' }],
-    stateMutability: 'view',
-    type: 'function',
-    name: 'atoms',
+    name: 'atomDepositFractionAmount',
     outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
-    inputs: [{ internalType: 'bytes[]', name: 'atomData', type: 'bytes[]' }],
+    inputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+    name: 'atoms',
+    outputs: [{ internalType: 'bytes', name: '', type: 'bytes' }],
+  },
+  {
+    inputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
+    stateMutability: 'view',
+    type: 'function',
+    name: 'atomsByHash',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+  },
+  {
+    inputs: [{ internalType: 'bytes[]', name: 'atomUris', type: 'bytes[]' }],
     stateMutability: 'payable',
     type: 'function',
     name: 'batchCreateAtom',
-    outputs: [{ internalType: 'uint256[]', name: 'ids', type: 'uint256[]' }],
-  },
-  {
-    inputs: [{ internalType: 'bytes[]', name: 'atomData', type: 'bytes[]' }],
-    stateMutability: 'payable',
-    type: 'function',
-    name: 'batchCreateAtomCompressed',
-    outputs: [{ internalType: 'uint256[]', name: 'ids', type: 'uint256[]' }],
+    outputs: [{ internalType: 'uint256[]', name: '', type: 'uint256[]' }],
   },
   {
     inputs: [
@@ -248,7 +323,16 @@ export const multivaultAbi = [
     stateMutability: 'payable',
     type: 'function',
     name: 'batchCreateTriple',
-    outputs: [{ internalType: 'uint256[]', name: 'ids', type: 'uint256[]' }],
+    outputs: [{ internalType: 'uint256[]', name: '', type: 'uint256[]' }],
+  },
+  {
+    inputs: [
+      { internalType: 'bytes32', name: 'operationId', type: 'bytes32' },
+      { internalType: 'bytes', name: 'data', type: 'bytes' },
+    ],
+    stateMutability: 'nonpayable',
+    type: 'function',
+    name: 'cancelOperation',
   },
   {
     inputs: [{ internalType: 'uint256', name: 'id', type: 'uint256' }],
@@ -265,7 +349,7 @@ export const multivaultAbi = [
     stateMutability: 'view',
     type: 'function',
     name: 'convertToAssets',
-    outputs: [{ internalType: 'uint256', name: 'assets', type: 'uint256' }],
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
     inputs: [
@@ -275,7 +359,7 @@ export const multivaultAbi = [
     stateMutability: 'view',
     type: 'function',
     name: 'convertToShares',
-    outputs: [{ internalType: 'uint256', name: 'shares', type: 'uint256' }],
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
     inputs: [],
@@ -285,18 +369,11 @@ export const multivaultAbi = [
     outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
-    inputs: [{ internalType: 'bytes', name: 'atomData', type: 'bytes' }],
+    inputs: [{ internalType: 'bytes', name: 'atomUri', type: 'bytes' }],
     stateMutability: 'payable',
     type: 'function',
     name: 'createAtom',
-    outputs: [{ internalType: 'uint256', name: 'id', type: 'uint256' }],
-  },
-  {
-    inputs: [{ internalType: 'bytes', name: 'atomData', type: 'bytes' }],
-    stateMutability: 'payable',
-    type: 'function',
-    name: 'createAtomCompressed',
-    outputs: [{ internalType: 'uint256', name: 'id', type: 'uint256' }],
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
     inputs: [
@@ -307,21 +384,21 @@ export const multivaultAbi = [
     stateMutability: 'payable',
     type: 'function',
     name: 'createTriple',
-    outputs: [{ internalType: 'uint256', name: 'id', type: 'uint256' }],
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
     inputs: [{ internalType: 'uint256', name: 'id', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
     name: 'currentSharePrice',
-    outputs: [{ internalType: 'uint256', name: 'price', type: 'uint256' }],
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
     inputs: [{ internalType: 'uint256', name: 'atomId', type: 'uint256' }],
     stateMutability: 'nonpayable',
     type: 'function',
     name: 'deployAtomWallet',
-    outputs: [{ internalType: 'address', name: 'atomWallet', type: 'address' }],
+    outputs: [{ internalType: 'address', name: '', type: 'address' }],
   },
   {
     inputs: [
@@ -331,7 +408,7 @@ export const multivaultAbi = [
     stateMutability: 'payable',
     type: 'function',
     name: 'depositAtom',
-    outputs: [{ internalType: 'uint256', name: 'shares', type: 'uint256' }],
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
     inputs: [
@@ -341,7 +418,7 @@ export const multivaultAbi = [
     stateMutability: 'payable',
     type: 'function',
     name: 'depositTriple',
-    outputs: [{ internalType: 'uint256', name: 'shares', type: 'uint256' }],
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
     inputs: [
@@ -351,7 +428,7 @@ export const multivaultAbi = [
     stateMutability: 'view',
     type: 'function',
     name: 'entryFeeAmount',
-    outputs: [{ internalType: 'uint256', name: 'feeAmount', type: 'uint256' }],
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
     inputs: [
@@ -361,7 +438,7 @@ export const multivaultAbi = [
     stateMutability: 'view',
     type: 'function',
     name: 'exitFeeAmount',
-    outputs: [{ internalType: 'uint256', name: 'feeAmount', type: 'uint256' }],
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
     inputs: [],
@@ -374,13 +451,33 @@ export const multivaultAbi = [
       { internalType: 'uint256', name: 'feeDenominator', type: 'uint256' },
       { internalType: 'uint256', name: 'minDeposit', type: 'uint256' },
       { internalType: 'uint256', name: 'minShare', type: 'uint256' },
+      { internalType: 'uint256', name: 'atomUriMaxLength', type: 'uint256' },
+      { internalType: 'uint256', name: 'decimalPrecision', type: 'uint256' },
+      { internalType: 'uint256', name: 'minDelay', type: 'uint256' },
     ],
+  },
+  {
+    inputs: [],
+    stateMutability: 'view',
+    type: 'function',
+    name: 'getAtomCost',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
     inputs: [{ internalType: 'uint256', name: 'id', type: 'uint256' }],
     stateMutability: 'pure',
     type: 'function',
     name: 'getCounterIdFromTriple',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+  },
+  {
+    inputs: [
+      { internalType: 'uint256', name: 'assets', type: 'uint256' },
+      { internalType: 'uint256', name: 'id', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+    name: 'getDepositFees',
     outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
@@ -395,6 +492,13 @@ export const multivaultAbi = [
     ],
   },
   {
+    inputs: [],
+    stateMutability: 'view',
+    type: 'function',
+    name: 'getTripleCost',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+  },
+  {
     inputs: [
       { internalType: 'uint256', name: 'vaultId', type: 'uint256' },
       { internalType: 'address', name: 'user', type: 'address' },
@@ -403,24 +507,6 @@ export const multivaultAbi = [
     type: 'function',
     name: 'getVaultBalance',
     outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
-  },
-  {
-    inputs: [],
-    stateMutability: 'view',
-    type: 'function',
-    name: 'getVaultStates',
-    outputs: [
-      {
-        internalType: 'struct Types.VaultState[]',
-        name: 'states',
-        type: 'tuple[]',
-        components: [
-          { internalType: 'uint256', name: 'id', type: 'uint256' },
-          { internalType: 'uint256', name: 'assets', type: 'uint256' },
-          { internalType: 'uint256', name: 'shares', type: 'uint256' },
-        ],
-      },
-    ],
   },
   {
     inputs: [
@@ -434,6 +520,17 @@ export const multivaultAbi = [
           { internalType: 'uint256', name: 'feeDenominator', type: 'uint256' },
           { internalType: 'uint256', name: 'minDeposit', type: 'uint256' },
           { internalType: 'uint256', name: 'minShare', type: 'uint256' },
+          {
+            internalType: 'uint256',
+            name: 'atomUriMaxLength',
+            type: 'uint256',
+          },
+          {
+            internalType: 'uint256',
+            name: 'decimalPrecision',
+            type: 'uint256',
+          },
+          { internalType: 'uint256', name: 'minDelay', type: 'uint256' },
         ],
       },
       {
@@ -441,7 +538,11 @@ export const multivaultAbi = [
         name: '_atomConfig',
         type: 'tuple',
         components: [
-          { internalType: 'uint256', name: 'atomCost', type: 'uint256' },
+          {
+            internalType: 'uint256',
+            name: 'atomShareLockFee',
+            type: 'uint256',
+          },
           { internalType: 'uint256', name: 'atomCreationFee', type: 'uint256' },
         ],
       },
@@ -457,7 +558,7 @@ export const multivaultAbi = [
           },
           {
             internalType: 'uint256',
-            name: 'atomEquityFeeForTriple',
+            name: 'atomDepositFractionForTriple',
             type: 'uint256',
           },
         ],
@@ -474,6 +575,21 @@ export const multivaultAbi = [
           },
           { internalType: 'address', name: 'entryPoint', type: 'address' },
           { internalType: 'address', name: 'atomWarden', type: 'address' },
+          {
+            internalType: 'address',
+            name: 'atomWalletBeacon',
+            type: 'address',
+          },
+        ],
+      },
+      {
+        internalType: 'struct IEthMultiVault.VaultConfig',
+        name: '_vaultConfig',
+        type: 'tuple',
+        components: [
+          { internalType: 'uint256', name: 'entryFee', type: 'uint256' },
+          { internalType: 'uint256', name: 'exitFee', type: 'uint256' },
+          { internalType: 'uint256', name: 'protocolFee', type: 'uint256' },
         ],
       },
     ],
@@ -489,6 +605,13 @@ export const multivaultAbi = [
     outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
   },
   {
+    inputs: [{ internalType: 'uint256', name: 'id', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+    name: 'isTripleId',
+    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+  },
+  {
     inputs: [
       { internalType: 'address', name: 'owner', type: 'address' },
       { internalType: 'uint256', name: 'id', type: 'uint256' },
@@ -496,7 +619,20 @@ export const multivaultAbi = [
     stateMutability: 'view',
     type: 'function',
     name: 'maxRedeem',
-    outputs: [{ internalType: 'uint256', name: 'shares', type: 'uint256' }],
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+  },
+  {
+    inputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+    name: 'pause',
+  },
+  {
+    inputs: [],
+    stateMutability: 'view',
+    type: 'function',
+    name: 'paused',
+    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
   },
   {
     inputs: [
@@ -506,7 +642,7 @@ export const multivaultAbi = [
     stateMutability: 'view',
     type: 'function',
     name: 'previewDeposit',
-    outputs: [{ internalType: 'uint256', name: 'shares', type: 'uint256' }],
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
     inputs: [
@@ -517,8 +653,8 @@ export const multivaultAbi = [
     type: 'function',
     name: 'previewRedeem',
     outputs: [
-      { internalType: 'uint256', name: 'assets', type: 'uint256' },
-      { internalType: 'uint256', name: 'exitFees', type: 'uint256' },
+      { internalType: 'uint256', name: '', type: 'uint256' },
+      { internalType: 'uint256', name: '', type: 'uint256' },
     ],
   },
   {
@@ -529,7 +665,7 @@ export const multivaultAbi = [
     stateMutability: 'view',
     type: 'function',
     name: 'protocolFeeAmount',
-    outputs: [{ internalType: 'uint256', name: 'feeAmount', type: 'uint256' }],
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
     inputs: [
@@ -540,7 +676,7 @@ export const multivaultAbi = [
     stateMutability: 'nonpayable',
     type: 'function',
     name: 'redeemAtom',
-    outputs: [{ internalType: 'uint256', name: 'assets', type: 'uint256' }],
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
     inputs: [
@@ -551,23 +687,26 @@ export const multivaultAbi = [
     stateMutability: 'nonpayable',
     type: 'function',
     name: 'redeemTriple',
-    outputs: [{ internalType: 'uint256', name: 'assets', type: 'uint256' }],
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
-    inputs: [{ internalType: 'address', name: '_admin', type: 'address' }],
+    inputs: [
+      { internalType: 'bytes32', name: 'operationId', type: 'bytes32' },
+      { internalType: 'bytes', name: 'data', type: 'bytes' },
+    ],
+    stateMutability: 'nonpayable',
+    type: 'function',
+    name: 'scheduleOperation',
+  },
+  {
+    inputs: [{ internalType: 'address', name: 'admin', type: 'address' }],
     stateMutability: 'nonpayable',
     type: 'function',
     name: 'setAdmin',
   },
   {
-    inputs: [{ internalType: 'uint256', name: '_atomCost', type: 'uint256' }],
-    stateMutability: 'nonpayable',
-    type: 'function',
-    name: 'setAtomCost',
-  },
-  {
     inputs: [
-      { internalType: 'uint256', name: '_atomCreationFee', type: 'uint256' },
+      { internalType: 'uint256', name: 'atomCreationFee', type: 'uint256' },
     ],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -577,18 +716,34 @@ export const multivaultAbi = [
     inputs: [
       {
         internalType: 'uint256',
-        name: '_atomEquityFeeForTriple',
+        name: 'atomDepositFractionForTriple',
         type: 'uint256',
       },
     ],
     stateMutability: 'nonpayable',
     type: 'function',
-    name: 'setAtomEquityFee',
+    name: 'setAtomDepositFraction',
   },
   {
     inputs: [
-      { internalType: 'uint256', name: '_id', type: 'uint256' },
-      { internalType: 'uint256', name: '_entryFee', type: 'uint256' },
+      { internalType: 'uint256', name: 'atomShareLockFee', type: 'uint256' },
+    ],
+    stateMutability: 'nonpayable',
+    type: 'function',
+    name: 'setAtomShareLockFee',
+  },
+  {
+    inputs: [
+      { internalType: 'uint256', name: 'atomUriMaxLength', type: 'uint256' },
+    ],
+    stateMutability: 'nonpayable',
+    type: 'function',
+    name: 'setAtomUriMaxLength',
+  },
+  {
+    inputs: [
+      { internalType: 'uint256', name: 'id', type: 'uint256' },
+      { internalType: 'uint256', name: 'entryFee', type: 'uint256' },
     ],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -596,37 +751,29 @@ export const multivaultAbi = [
   },
   {
     inputs: [
-      { internalType: 'uint256', name: '_id', type: 'uint256' },
-      { internalType: 'uint256', name: '_exitFee', type: 'uint256' },
+      { internalType: 'uint256', name: 'id', type: 'uint256' },
+      { internalType: 'uint256', name: 'exitFee', type: 'uint256' },
     ],
     stateMutability: 'nonpayable',
     type: 'function',
     name: 'setExitFee',
   },
   {
-    inputs: [
-      { internalType: 'uint256', name: '_feeDenominator', type: 'uint256' },
-    ],
-    stateMutability: 'nonpayable',
-    type: 'function',
-    name: 'setFeeDenominator',
-  },
-  {
-    inputs: [{ internalType: 'uint256', name: '_minDeposit', type: 'uint256' }],
+    inputs: [{ internalType: 'uint256', name: 'minDeposit', type: 'uint256' }],
     stateMutability: 'nonpayable',
     type: 'function',
     name: 'setMinDeposit',
   },
   {
-    inputs: [{ internalType: 'uint256', name: '_minShare', type: 'uint256' }],
+    inputs: [{ internalType: 'uint256', name: 'minShare', type: 'uint256' }],
     stateMutability: 'nonpayable',
     type: 'function',
     name: 'setMinShare',
   },
   {
     inputs: [
-      { internalType: 'uint256', name: '_id', type: 'uint256' },
-      { internalType: 'uint256', name: '_protocolFee', type: 'uint256' },
+      { internalType: 'uint256', name: 'id', type: 'uint256' },
+      { internalType: 'uint256', name: 'protocolFee', type: 'uint256' },
     ],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -634,7 +781,7 @@ export const multivaultAbi = [
   },
   {
     inputs: [
-      { internalType: 'address', name: '_protocolVault', type: 'address' },
+      { internalType: 'address', name: 'protocolVault', type: 'address' },
     ],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -642,11 +789,22 @@ export const multivaultAbi = [
   },
   {
     inputs: [
-      { internalType: 'uint256', name: '_tripleCreationFee', type: 'uint256' },
+      { internalType: 'uint256', name: 'tripleCreationFee', type: 'uint256' },
     ],
     stateMutability: 'nonpayable',
     type: 'function',
     name: 'setTripleCreationFee',
+  },
+  {
+    inputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
+    stateMutability: 'view',
+    type: 'function',
+    name: 'timelocks',
+    outputs: [
+      { internalType: 'bytes', name: 'data', type: 'bytes' },
+      { internalType: 'uint256', name: 'readyTime', type: 'uint256' },
+      { internalType: 'bool', name: 'executed', type: 'bool' },
+    ],
   },
   {
     inputs: [
@@ -668,7 +826,7 @@ export const multivaultAbi = [
       { internalType: 'uint256', name: 'tripleCreationFee', type: 'uint256' },
       {
         internalType: 'uint256',
-        name: 'atomEquityFeeForTriple',
+        name: 'atomDepositFractionForTriple',
         type: 'uint256',
       },
     ],
@@ -702,6 +860,19 @@ export const multivaultAbi = [
     outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
   },
   {
+    inputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
+    stateMutability: 'view',
+    type: 'function',
+    name: 'triplesByHash',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+  },
+  {
+    inputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+    name: 'unpause',
+  },
+  {
     inputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
     stateMutability: 'view',
     type: 'function',
@@ -731,6 +902,7 @@ export const multivaultAbi = [
       { internalType: 'contract IPermit2', name: 'permit2', type: 'address' },
       { internalType: 'address', name: 'entryPoint', type: 'address' },
       { internalType: 'address', name: 'atomWarden', type: 'address' },
+      { internalType: 'address', name: 'atomWalletBeacon', type: 'address' },
     ],
   },
   { inputs: [], stateMutability: 'payable', type: 'receive' },

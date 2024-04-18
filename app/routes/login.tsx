@@ -1,16 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useFetcher, useLoaderData, useSubmit } from '@remix-run/react'
-import { ActionFunctionArgs, LoaderFunction, json } from '@remix-run/node'
+import type { ActionFunctionArgs, LoaderFunction} from '@remix-run/node';
+import { json } from '@remix-run/node'
 import { makeDomainFunction } from 'domain-functions'
 import { optimismSepolia } from 'viem/chains'
-import {
-  useAccount,
-  useDisconnect,
-  useNetwork,
-  useSwitchNetwork,
-  useWalletClient,
-} from 'wagmi'
-import { z } from 'zod'
+import { useAccount, useDisconnect, useWalletClient, useSwitchChain } from 'wagmi'
 import { ConnectButton } from '@/components/connect-button'
 import Header from '@/components/header'
 import { Card } from '@/components/ui/card'
@@ -19,11 +13,13 @@ import { formAction } from '@/lib/services/form.server'
 import { newDIDSessionFromWalletClient } from '@/lib/utils/siwe'
 import templateAppIcon from '../../src/images/app-template-logo.png'
 import GetStarted from '@/components/get-started'
+import { z } from 'zod'
 
 const schema = z.object({
   didSession: z.string(),
-  wallet: z.string(),
+  wallet: z.string()
 })
+
 const mutation = makeDomainFunction(schema)(async (values) => {
   return values
 })
@@ -32,7 +28,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const resp = await formAction({
     request,
     schema,
-    mutation,
+    mutation
   })
   if (resp.ok) {
     await login(request)
@@ -42,6 +38,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export const loader: LoaderFunction = async ({ request }) => {
   const user = await isAuthedUser(request)
+
   return json({ user })
 }
 
@@ -50,9 +47,8 @@ export default function LoginIndexRoute() {
   const fetcher = useFetcher()
   const submit = useSubmit()
 
-  const { isConnected, address } = useAccount()
-  const { chain } = useNetwork()
-  const { switchNetwork } = useSwitchNetwork()
+  const { isConnected, chain, address } = useAccount()
+  const { switchChain } = useSwitchChain()
   const { disconnect } = useDisconnect()
   const { data: walletClient } = useWalletClient()
 
@@ -64,7 +60,7 @@ export default function LoginIndexRoute() {
       if (walletClient) {
         const didSesh = await newDIDSessionFromWalletClient({
           account: walletClient?.account,
-          signMessage: walletClient?.signMessage,
+          signMessage: walletClient?.signMessage
         })
         setDidSession(didSesh.serialize())
         setHasSigned(true)
@@ -81,12 +77,13 @@ export default function LoginIndexRoute() {
     disconnect()
     fetcher.submit({}, { method: 'post', action: '/actions/auth/logout' })
   }
+
   function handleLogin() {
     let formData = new FormData()
     formData.set('didSession', didSession)
     formData.set('wallet', walletClient?.account?.address as string)
     submit(formData, {
-      method: 'post',
+      method: 'post'
     })
   }
 
@@ -101,10 +98,12 @@ export default function LoginIndexRoute() {
 
   // Detect Wrong Network
   useEffect(() => {
-    if (chain !== optimismSepolia && switchNetwork) {
-      switchNetwork(optimismSepolia.id)
+    if (chain !== optimismSepolia && switchChain) {
+      switchChain({
+        chainId: optimismSepolia.id
+      })
     }
-  }, [chain, switchNetwork])
+  }, [chain, switchChain])
 
   // Trigger remix auth action if user has a did session and has signed
   useEffect(() => {
@@ -118,14 +117,14 @@ export default function LoginIndexRoute() {
       <Header user={user} />
       <div className="mt-32 flex h-full w-full flex-col items-center gap-8">
         <Card className="flex w-[92vw] max-w-[728px] flex-col items-center gap-8 p-16 text-center">
-          <img src={templateAppIcon} className="h-24 w-24" />
+          <img src={templateAppIcon} alt="" className="h-24 w-24" />
           <div className="space-y-4">
             <h4 className="text-3xl font-semibold leading-none">
               Sign in to Intuition
             </h4>
             <div className="opacity-70">Connect your wallet to get started</div>
           </div>
-          <ConnectButton size="lg" user={user} />
+          <ConnectButton user={user} />
         </Card>
         <GetStarted />
       </div>

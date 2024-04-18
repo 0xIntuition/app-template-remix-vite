@@ -1,7 +1,7 @@
 import { createPublicClient, getContract, http } from 'viem'
 import { mainnet, optimismSepolia } from 'viem/chains'
 import { MULTIVAULT_CONTRACT_ADDRESS } from './constants'
-import { multivaultAbi } from '../abis/ethMultiVault'
+import { multivaultAbi } from '../abis/multivault'
 
 const alchemyRpcUrl = process.env.ALCHEMY_RPC_URL
 const alchemyMainnetRpcUrl = process.env.ALCHEMY_MAINNET_RPC_URL
