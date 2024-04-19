@@ -1,39 +1,40 @@
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils/misc'
 import { ConnectButton as RainbowkitConnectButton } from '@rainbow-me/rainbowkit'
-import { Loader2Icon } from 'lucide-react'
-import type { User } from 'types/user'
-import { optimismSepolia } from 'viem/chains'
-import { useSwitchNetwork } from 'wagmi'
+import { type Cookie } from '@remix-run/node'
+import { type User } from 'types/user'
+import { baseSepolia } from 'viem/chains'
+import { useSwitchChain } from 'wagmi'
 
 interface ConnectButtonProps {
   user?: User | null
-  size?: 'sm' | 'default' | 'lg'
   className?: string
+  tosCookie?: Cookie
+  setShowTOSModal?: (value: boolean) => void
 }
 
-export function ConnectButton({
-  user,
-  size = 'default',
-  className,
-}: ConnectButtonProps) {
-  const { switchNetwork } = useSwitchNetwork()
+export const ConnectButton = (props: ConnectButtonProps) => {
+  const { user, className, tosCookie, setShowTOSModal } = props
+  const { switchChain } = useSwitchChain()
 
   const handleSwitch = () => {
-    if (switchNetwork) {
-      switchNetwork(optimismSepolia.id)
+    if (switchChain) {
+      switchChain({
+        // chainId: CURRENT_ENV === 'production' ? mainnet.id : baseSepolia.id,
+        chainId: baseSepolia.id,
+      })
     }
   }
 
   return (
     <RainbowkitConnectButton.Custom>
       {({
-        account,
-        chain,
-        openConnectModal,
-        authenticationStatus,
-        mounted,
-      }) => {
+          account,
+          chain,
+          openConnectModal,
+          openAccountModal,
+          authenticationStatus,
+          mounted,
+        }) => {
         const ready = mounted && authenticationStatus !== 'loading'
         const connected =
           ready &&
@@ -54,33 +55,29 @@ export function ConnectButton({
           >
             {!connected ? (
               <Button
-                size={size}
+                className={className}
                 variant="connect"
-                className={cn(className)}
-                onClick={openConnectModal}
+                onClick={
+                  tosCookie
+                    ? openConnectModal
+                    : () => setShowTOSModal && setShowTOSModal(true)
+                }
               >
                 Connect Wallet
               </Button>
             ) : !user?.didSession ? (
-              <Button
-                disabled
-                size={size}
-                variant="connect"
-                className={cn(className)}
-              >
-                <Loader2Icon className="mr-1 h-5 w-5 animate-spin" /> Signing...
+              <Button className={className}>
+                Signing...
               </Button>
-            ) : chain?.id !== optimismSepolia.id ? (
-              <Button
-                size={size}
-                variant="connect"
-                className={cn(className)}
-                onClick={handleSwitch}
-              >
+            ) : chain?.id !== baseSepolia.id ? (
+              // (CURRENT_ENV === 'production' ? mainnet.id : baseSepolia.id) ? ( // add this back in when we fully go to prod
+              <Button className={className} onClick={handleSwitch}>
                 Wrong Network
               </Button>
             ) : (
-              <div>{account?.displayName}</div>
+              <Button className={className} onClick={openAccountModal}>
+                {user?.ensName ?? account?.displayName}
+              </Button>
             )}
           </div>
         )

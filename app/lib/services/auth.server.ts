@@ -1,17 +1,24 @@
-import { sessionStorage } from '@/lib/services/session.server'
+import { sessionStorage } from '@/.server/session'
 import { redirect } from '@remix-run/node'
 import { DIDSession } from 'did-session'
 import { Authenticator } from 'remix-auth'
 import type { User } from 'types/user'
-import { FormStrategy } from '../utils/auth-strategy'
-import { invariant } from '../utils/misc'
+import { invariant } from '@/lib/utils/misc'
+import { FormStrategy } from '@/lib/utils/auth-strategy'
 
 // Create an instance of the authenticator, pass a generic with what
 // strategies will return and will store in the session
+
 export let authenticator = new Authenticator<User>(sessionStorage, {
   sessionKey: '_session',
   sessionErrorKey: '_session_error',
 })
+
+const apiUrl = process.env.API_URL
+
+if (!apiUrl) {
+  throw new Error('API_URL is not defined')
+}
 
 authenticator.use(
   new FormStrategy(async ({ form }) => {
@@ -28,6 +35,7 @@ authenticator.use(
 
     // login the user
     let user = await authenticate(didSession, wallet)
+    console.log('authenticate user', user)
     return user
   }),
   'auth',
@@ -38,38 +46,70 @@ export async function authenticate(
   wallet: string,
 ): Promise<User> {
   const session = await DIDSession.fromSession(didSession)
-  if (!session.hasSession || session.isExpired) {
+
+  if (!session || !session.hasSession || session.isExpired) {
     throw new Error('Invalid DID Session')
   }
+  // const ensName = await mainnetClient.getEnsName({ address: wallet as Address })
+
+  const isAuthed = await fetch(`${apiUrl}/auth`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': process.env.API_KEY!,
+    },
+    body: JSON.stringify({
+      didSession,
+    }),
+  })
+
+  if (!isAuthed.ok) {
+    throw new Error('Not authorized')
+  }
+
+  const { token, refreshToken, newUser, userId } = await isAuthed.json()
 
   return {
     didSession,
     wallet,
+    id: userId,
+    token,
+    refreshToken,
+    newUser,
   }
 }
 
 export async function login(request: Request) {
   await authenticator.authenticate('auth', request, {
-    successRedirect: '/app',
+    successRedirect: '/',
   })
 }
 
 export async function logout(request: Request) {
-  await authenticator.logout(request, { redirectTo: '/login' })
+  await authenticator.logout(request, { redirectTo: '/' })
 }
+
+// export async function requireAuthedUser(request: Request) {
+//   const user = await authenticator.isAuthenticated(request)
+//   if (user) return await Promise.resolve(user)
+//   return redirect('/')
+// }
 
 export const requireAuthedUser = async <TRequest extends Request>(
   request: TRequest,
 ) => {
   const user = await authenticator.isAuthenticated(request)
+
   if (!user) {
     throw redirect('/login', 302)
   }
+
   return user
 }
 
 export async function isAuthedUser(request: Request) {
   const user = await authenticator.isAuthenticated(request)
+
   if (user) return await Promise.resolve(user)
   return null
 }

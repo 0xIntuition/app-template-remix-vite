@@ -3,60 +3,58 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils/misc'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { LogOut } from 'lucide-react'
 import type { User } from 'types/user'
-import { optimismSepolia } from 'viem/chains'
-import { useSwitchNetwork } from 'wagmi'
-import { MetaMaskAvatar } from 'react-metamask-avatar'
+import { baseSepolia } from 'viem/chains'
+import { useSwitchChain } from 'wagmi'
+import { NavLink } from '@remix-run/react'
 
 interface AccountButtonProps {
   user?: User | null
-  size?: 'sm' | 'default' | 'lg'
   handleSignOut: () => void
   className?: string
 }
 
-export function AccountButton({
-  user,
-  size = 'default',
-  handleSignOut,
-  className,
-}: AccountButtonProps) {
-  const { switchNetwork } = useSwitchNetwork()
+export function AccountButton(props: AccountButtonProps) {
+  const { user, handleSignOut, className } = props
+  const { switchChain } = useSwitchChain()
 
   const handleSwitch = () => {
-    if (switchNetwork) {
-      switchNetwork(optimismSepolia.id)
+    if (switchChain) {
+      switchChain({
+        // chainId: CURRENT_ENV === 'production' ? mainnet.id : baseSepolia.id, // change this back when we fully go to prod
+        chainId: baseSepolia.id
+      })
     }
   }
 
   return (
     <ConnectButton.Custom>
       {({
-        account,
-        chain,
-        openConnectModal,
-        authenticationStatus,
-        mounted,
-      }) => {
+          account,
+          chain,
+          authenticationStatus,
+          mounted
+        }) => {
         const ready = mounted && authenticationStatus !== 'loading'
         const connected =
           ready &&
           account &&
           chain &&
           (!authenticationStatus || authenticationStatus === 'authenticated')
-
-        if (connected && chain?.id !== optimismSepolia.id) {
+        if (
+          connected &&
+          chain?.id !== baseSepolia.id
+          // (CURRENT_ENV === 'production' ? mainnet.id : baseSepolia.id)
+        ) {
           return (
             <Button
-              size={size}
-              variant="outline"
+              variant="default"
               className={cn(className)}
               onClick={handleSwitch}
             >
@@ -71,42 +69,32 @@ export function AccountButton({
               style: {
                 opacity: 0,
                 pointerEvents: 'none',
-                userSelect: 'none',
-              },
+                userSelect: 'none'
+              }
             })}
           >
-            {connected && !!user ? (
-              <div className="flex gap-2 rounded-full p-1">
+            {connected && !!user && (
+              <div className="flex gap-2 rounded-full">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      size={'lg-icon'}
-                      variant="ghost"
-                      className={cn(
-                        className,
-                        'h-10 w-10 overflow-hidden rounded-full transition-transform hover:scale-105',
-                      )}
-                    >
-                      <div className="flex items-center gap-1">
-                        <MetaMaskAvatar
-                          address={account?.address || ''}
-                          size={40}
-                          className="rounded-full"
-                        />
-                      </div>
-                    </Button>
+                    <span>
+                      <Button className={cn(className)}>
+                        {user?.ensName ?? account?.displayName}
+                      </Button>
+                    </span>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-popover w-48">
-                    <DropdownMenuLabel className="flex items-center gap-2">
-                      <div className="space-y-1">
-                        <div className="text-sm font-normal text-primary-500">
-                          Signed in as:
-                        </div>
-                        <div className="font-semibold">
+                  <DropdownMenuContent align="end" className="w-48 bg-popover">
+                    <DropdownMenuItem className="flex items-center gap-2">
+                      <NavLink to={`/profile`} className="font-semibold">
+                        <div className="space-y-1">
+                          <div className="text-sm font-normal text-secondary-foreground">
+                            Signed in as:
+                          </div>
+
                           {account?.displayName}
                         </div>
-                      </div>
-                    </DropdownMenuLabel>
+                      </NavLink>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onSelect={(e) => {
@@ -124,7 +112,7 @@ export function AccountButton({
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-            ) : null}
+            )}
           </div>
         )
       }}

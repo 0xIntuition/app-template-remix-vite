@@ -1,22 +1,28 @@
 import { useNonce } from '@/lib/utils/nonce-provider'
-import {
-  RainbowKitProvider,
-  darkTheme,
-  getDefaultWallets,
-} from '@rainbow-me/rainbowkit'
-import { MetaFunction, json, LoaderFunctionArgs } from '@remix-run/node'
+import { RainbowKitProvider, darkTheme, getDefaultConfig, getDefaultWallets } from '@rainbow-me/rainbowkit'
+import type { MetaFunction, LoaderFunctionArgs } from '@remix-run/node'
+import { json } from '@remix-run/node'
 import {
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
-  useLoaderData,
+  useLoaderData
 } from '@remix-run/react'
-import React, { useState } from 'react'
-import { WagmiConfig, configureChains, createConfig, mainnet } from 'wagmi'
-import { optimismSepolia } from 'wagmi/chains'
-import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
+import React, { useMemo } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { chainalysisOracleAbi } from './lib/abis/chainalysisOracle'
+import { WagmiProvider } from 'wagmi'
+import { base, baseSepolia, mainnet } from 'viem/chains'
+import type { Chain } from 'viem'
+import { http } from 'viem'
+import { phantomWallet, rabbyWallet } from '@rainbow-me/rainbowkit/wallets'
+import { getEnv } from '@/.server/env'
+import { isAuthedUser } from '@/lib/services/auth.server'
+import { mainnetClient } from '@/lib/utils/viem'
+
+
 import '@/styles/global.css'
 import '@rainbow-me/rainbowkit/styles.css'
 
@@ -25,27 +31,36 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     {
       title: data
         ? 'Intuition App Template - Remix'
-        : 'Error | Intuition App Template - Remix',
+        : 'Error | Intuition App Template - Remix'
     },
-    { name: 'description', content: `Start your Intuition journey.` },
+    { name: 'description', content: `Start your Intuition journey.` }
   ]
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const user = await isAuthedUser(request)
+
+  const isSanctioned = user?.wallet
+    ? ((await mainnetClient.readContract({
+      address: '0x40C57923924B5c5c5455c48D93317139ADDaC8fb',
+      abi: chainalysisOracleAbi,
+      functionName: 'isSanctioned',
+      args: [user.wallet],
+    })) as boolean)
+    : false
+
   return json({
-    ENV: {
-      ALCHEMY_API_KEY: process.env.ALCHEMY_API_KEY,
-      ALCHEMY_RPC_URL: process.env.ALCHEMY_RPC_URL,
-      WALLETCONNECT_PROJECT_ID: process.env.WALLETCONNECT_PROJECT_ID,
-    },
+    isSanctioned,
+    user,
+    ENV: getEnv()
   })
 }
 
 function Document({
-  children,
-  nonce,
-  env = {},
-}: {
+                    children,
+                    nonce,
+                    env = {}
+                  }: {
   children: React.ReactNode
   nonce: string
   theme?: string
@@ -53,66 +68,62 @@ function Document({
 }) {
   return (
     <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        {children}
-        <ScrollRestoration />
-        <Scripts />
-      </body>
+    <head>
+      <meta charSet="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <Meta />
+      <Links />
+    </head>
+    <body>
+    {children}
+    <ScrollRestoration />
+    <Scripts />
+    </body>
     </html>
   )
 }
 
+
+const queryClient = new QueryClient()
+
 export default function App() {
-  const { ENV } = useLoaderData<typeof loader>()
+  const { ENV: env } = useLoaderData<typeof loader>()
   const nonce = useNonce()
+  const { wallets } = getDefaultWallets()
 
-  const [{ config, chains }] = useState(() => {
-    const { chains, publicClient, webSocketPublicClient } = configureChains(
-      [optimismSepolia, mainnet],
-      [
-        jsonRpcProvider({
-          rpc: () => ({
-            http: ENV.ALCHEMY_RPC_URL!,
-          }),
-        }),
-      ],
-    )
+  const configAndChains = useMemo(() => {
+    const testChains = [baseSepolia] // @TODO: Change this during the chains refactor since it's a different approach
 
-    const { connectors } = getDefaultWallets({
-      appName: 'Intuition App Template - Remix',
+    const chains: readonly [Chain, ...Chain[]] = [mainnet, ...testChains]
+
+    const config = getDefaultConfig({
+      appName: 'Intuition app template',
+      projectId: env.WALLETCONNECT_PROJECT_ID!,
       chains,
-      projectId: ENV.WALLETCONNECT_PROJECT_ID!,
+      ssr: true,
+      wallets: [
+        ...wallets,
+        {
+          groupName: 'Other',
+          wallets: [phantomWallet, rabbyWallet]
+        }
+      ], // Frame should already show up if it is installed
+      transports: {
+        [mainnet.id]: http(env.ALCHEMY_MAINNET_RPC_URL!),
+        [baseSepolia.id]: http(env.ALCHEMY_BASE_SEPOLIA_RPC_URL!),
+        [base.id]: http(env.ALCHEMY_BASE_RPC_URL!)
+      }
     })
 
-    const config = createConfig({
-      autoConnect: true,
-      connectors,
-      publicClient,
-      webSocketPublicClient,
-    })
-
-    return {
-      config,
-      chains,
-    }
-  })
+    return { config, chains }
+  }, [wallets, env])
 
   return (
-    <Document nonce={nonce} env={ENV}>
-      {config && chains ? (
-        <>
-          <WagmiConfig config={config}>
-            <RainbowKitProvider
-              chains={chains}
-              modalSize="compact"
-              theme={darkTheme()}
-            >
+    <Document nonce={nonce} env={env}>
+      {configAndChains.config && configAndChains.chains && (
+        <WagmiProvider config={configAndChains.config}>
+          <QueryClientProvider client={queryClient}>
+            <RainbowKitProvider modalSize="compact" theme={darkTheme()}>
               <div className="relative flex min-h-screen w-full flex-col justify-between antialiased">
                 <div className="z-10 flex-1">
                   <Outlet />
@@ -123,14 +134,14 @@ export default function App() {
                     maskImage:
                       'linear-gradient(to top left, transparent, black)',
                     WebkitMaskImage:
-                      'linear-gradient(to top left, transparent, black)',
+                      'linear-gradient(to top left, transparent, black)'
                   }}
                 />
               </div>
             </RainbowKitProvider>
-          </WagmiConfig>
-        </>
-      ) : null}
+          </QueryClientProvider>
+        </WagmiProvider>
+      )}
     </Document>
   )
 }

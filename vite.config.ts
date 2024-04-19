@@ -3,12 +3,15 @@ import { installGlobals } from '@remix-run/node'
 import { defineConfig } from 'vite'
 import { flatRoutes } from 'remix-flat-routes'
 import tsconfigPaths from 'vite-tsconfig-paths'
-import { nodePolyfills } from 'vite-plugin-node-polyfills'
+import Unfonts from 'unplugin-fonts/vite'
+
+const isStorybook = process.argv[1]?.includes('storybook')
 
 installGlobals()
 
 export default defineConfig({
   plugins: [
+    !isStorybook &&
     remix({
       ignoredRouteFiles: ['**/.*'],
       routes: async (defineRoutes) => {
@@ -23,13 +26,15 @@ export default defineConfig({
       },
     }),
     tsconfigPaths(),
-    nodePolyfills({
-      globals: {
-        Buffer: true, // can also be 'build', 'dev', or false
-        global: true,
-        process: true,
+    Unfonts({
+      custom: {
+        families: [
+          {
+            name: 'Geist',
+            src: '/src/fonts/Geist/*.woff2',
+          },
+        ],
       },
-      protocolImports: false,
     }),
   ],
   server: {
@@ -37,5 +42,12 @@ export default defineConfig({
   },
   build: {
     target: 'ES2022',
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: 'globalThis',
+      },
+    },
   },
 })

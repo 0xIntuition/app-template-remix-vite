@@ -1,8 +1,8 @@
 import { Cacao, SiweMessage } from '@didtools/cacao'
-import { randomBytes } from 'crypto'
 import { DIDSession, createDIDKey } from 'did-session'
 import { generateNonce } from 'siwe'
 import { DEFAULT_CHAIN_ID } from './constants'
+import { getRandomBytes } from './misc'
 
 /**
  * Uses window.location.host and window.location.origin for the
@@ -15,7 +15,7 @@ export function createSignInMessage(
   message: Partial<SiweMessage> = {},
 ): SiweMessage {
   message.domain ??= window.location.host // update the fallback for the domain
-  message.statement ??= 'Sign in to Intuition'
+  message.statement ??= 'Sign in to Memekek'
   message.address ??= '0x0'
   message.uri ??= window.location.origin // update the fallback for the origin (we want to use the didKey.id, as shown below)
   message.version ??= '1'
@@ -25,6 +25,7 @@ export function createSignInMessage(
   return new SiweMessage(message)
 }
 
+//TODO: Export this to client package
 export async function newDIDSessionFromWalletClient(walletClient: {
   account: { address: string }
   signMessage: (message: { message: string }) => Promise<string>
@@ -32,7 +33,7 @@ export async function newDIDSessionFromWalletClient(walletClient: {
   if (!walletClient.account.address) throw new Error('No wallet client')
 
   // keys
-  const keySeed = randomBytes(32)
+  const keySeed = getRandomBytes(32)
   const didKey = await createDIDKey(keySeed)
 
   const base = createSignInMessage()
