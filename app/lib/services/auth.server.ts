@@ -7,7 +7,7 @@ import { FormStrategy } from '../utils/auth-strategy'
 import { invariant } from '../utils/misc'
 
 // Create an instance of the authenticator, pass a generic with what
-// strategies will return and will store in the session
+// strategies will return and will be stored in the session
 export let authenticator = new Authenticator<User>(sessionStorage, {
   sessionKey: '_session',
   sessionErrorKey: '_session_error',

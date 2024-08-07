@@ -11,7 +11,7 @@ Learn more about Remix-Vite in the [Remix Documentation](https://remix.run/docs/
 
 ### Prerequisites
 
-Node.js: Before anything else, Remix.run requires that you have either a Active or Maintenance version of Node.js installed. [Remix Documentation](https://remix.run/docs/en/main/other-api/node)
+Node.js: Before anything else, Remix.run requires that you have either an Active or Maintenance version of Node.js installed. [Remix Documentation](https://remix.run/docs/en/main/other-api/node)
 
 Optimism Sepolia: Intuition is currently deployed on Optimism Sepolia Testnet. To interact with the Intuition API, you'll need to connect to the [Optimism Sepolia Testnet](https://docs.optimism.io/chain/networks).
 
@@ -45,7 +45,7 @@ Optimism Sepolia: Intuition is currently deployed on Optimism Sepolia Testnet. T
 
 3. **Environment Setup**:
 
-   Copy `.env.example` to `.env` and configure as follows:
+   Copy `.env.example` to `.env` and configure it as follows:
 
    - `ALCHEMY_API_KEY`: Alchemy Optimism Sepolia Testnet API key. [Tutorial](https://docs.alchemy.com/docs/alchemy-quickstart-guide).
    - `ALCHEMY_RPC_URL`: Alchemy RPC URL for the Optimism Sepolia Testnet.
